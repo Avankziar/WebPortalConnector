@@ -29,6 +29,10 @@ public class MysqlSetup
 		{
 			return false;
 		}
+		if(!setupDatabaseII())
+		{
+			return false;
+		}
 		return true;
 	}
 	
@@ -68,6 +72,10 @@ public class MysqlSetup
 		return true;
 	}
 	
+	//CREATE TABLE IF NOT EXISTS `wpcUser` (`id` int AUTO_INCREMENT PRIMARY KEY, `player_uuid` char(36) NOT NULL UNIQUE, `player_name` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL, `pw` text, `isadmin` boolean);
+	//INSERT INTO `wpcuser`(`player_uuid`, `player_name`, `pw`, `isadmin`) VALUES ('t8c47f99-8559-4c62-ad58-bz8951b7ab7d','Quiln','Alpha78Bravo00','true')
+	//INSERT INTO `wpcuser`(`player_uuid`, `player_name`, `pw`, `isadmin`) VALUES ('y9c47f99-1173-4c62-eq58-bz8951b7ab7d','DrOO','YourPassword','false')
+	
 	public boolean setupDatabaseI() 
 	{
 		if (conn != null) 
@@ -75,11 +83,93 @@ public class MysqlSetup
 			PreparedStatement query = null;
 		      try 
 		      {	        
-		        String data = "CREATE TABLE IF NOT EXISTS `" + plugin.getMysqlHandler().tablePluginUser
+		        String data = "CREATE TABLE IF NOT EXISTS `" + MysqlHandler.tableNameI
 		        		+ "` (id int AUTO_INCREMENT PRIMARY KEY,"
 		        		+ " player_uuid char(36) NOT NULL UNIQUE,"
 		        		+ " player_name varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL,"
-		        		+ " searchtype text);";
+		        		+ " pw text,"
+		        		+ " isadmin boolean);";
+		        query = conn.prepareStatement(data);
+		        query.execute();
+		      } catch (SQLException e) 
+		      {
+		        e.printStackTrace();
+		        WebPortalConnector.log.severe("Error creating tables! Error: " + e.getMessage());
+		        return false;
+		      } finally 
+		      {
+		    	  try 
+		    	  {
+		    		  if (query != null) 
+		    		  {
+		    			  query.close();
+		    		  }
+		    	  } catch (Exception e) 
+		    	  {
+		    		  e.printStackTrace();
+		    		  return false;
+		    	  }
+		      }
+		}
+		return true;
+	}
+	
+	//CREATE TABLE IF NOT EXISTS `wpcPlugin` (`id` int AUTO_INCREMENT PRIMARY KEY, `pluginname` text, `aliasname` text, `activ` boolean, `tablejson` longtext);
+	//INSERT INTO `wpcplugin`(`pluginname`, `aliasname`, `activ`, `tablejson`) VALUES ('AdvancedEconomyPlus', 'Geld-System', 'true', '{"TABLEWRAPPER":[{"KEYWORD":"playeraccount","TABLENAME":"secretcrafteconomyplayerdata"},{"KEYWORD":"bankaccount","TABLENAME":"secretcrafteconomybankdata"},{"KEYWORD":"actionlog","TABLENAME":"secretcrafteconomylogger"},{"KEYWORD":"trendlog","TABLENAME":"secretcrafteconomytrend"},{"KEYWORD":"standingorder","TABLENAME":"secretcrafteconomystandigorder"}]}')
+	//
+	public boolean setupDatabaseII() 
+	{
+		if (conn != null) 
+		{
+			PreparedStatement query = null;
+		      try 
+		      {	        
+		        String data = "CREATE TABLE IF NOT EXISTS `" + MysqlHandler.tableNameII
+		        		+ "` (id int AUTO_INCREMENT PRIMARY KEY,"
+		        		+ " pluginname text,"
+		        		+ " aliasname text,"
+		        		+ " activ boolean,"
+		        		+ " tablejson longtext);";
+		        query = conn.prepareStatement(data);
+		        query.execute();
+		      } catch (SQLException e) 
+		      {
+		        e.printStackTrace();
+		        WebPortalConnector.log.severe("Error creating tables! Error: " + e.getMessage());
+		        return false;
+		      } finally 
+		      {
+		    	  try 
+		    	  {
+		    		  if (query != null) 
+		    		  {
+		    			  query.close();
+		    		  }
+		    	  } catch (Exception e) 
+		    	  {
+		    		  e.printStackTrace();
+		    		  return false;
+		    	  }
+		      }
+		}
+		return true;
+	}
+	
+	public boolean setupDatabaseIII() 
+	{
+		if (conn != null) 
+		{
+			PreparedStatement query = null;
+		      try 
+		      {	        
+		        String data = "CREATE TABLE IF NOT EXISTS `" + MysqlHandler.tableNameIII
+		        		+ "` (id int AUTO_INCREMENT PRIMARY KEY,"
+		        		+ " timestamp_unix bigint,"
+		        		+ " pluginname text,"
+		        		+ " methodejson longtext,"
+		        		+ " isopen boolean,"
+		        		+ " wassuccessful boolean,"
+		        		+ " errormessage longtext);";
 		        query = conn.prepareStatement(data);
 		        query.execute();
 		      } catch (SQLException e) 

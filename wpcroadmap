@@ -1,0 +1,11 @@
+Build 1 ======================================================================================================================
+- +/wpc | Infobefehl
+- +/wpc howtoregister | Infobefehl, wie man sich für das WebPortal regestrien kann
+- +/wpc register <Passwort> [IstAdmin(Boolean)] | Regestrierung für das Webportal
+- /wpc setAdmin <Spielername> <IstAdmin(Boolean)> | Set den Adminstatus für existierende Spieler
+- /wpc setplugin <Pluginname> <Aktiv(Boolean)> | Fügt ein Plugin der Mysql hinzu, damit es vom WebPortal erkannt und benutzt wird. Der Boolean
+                                                 gibt an, ob das plugin
+- +Mysql zur User Regestrierung. Mit istAdmin Boolean
+- +Mysql zur Übermittlung aller Tabellennamen unterstützter Plugins
+- +Mysql zur Aufgabenabarbeitung von PHP
+==============================================================================================================================

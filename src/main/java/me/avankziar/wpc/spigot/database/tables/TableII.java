@@ -8,12 +8,12 @@ import java.util.ArrayList;
 
 import main.java.me.avankziar.wpc.spigot.WebPortalConnector;
 import main.java.me.avankziar.wpc.spigot.database.MysqlHandler;
-import main.java.me.avankziar.wpc.spigot.objects.PluginUser;
+import main.java.me.avankziar.wpc.spigot.objects.PluginObject;
+import main.java.me.avankziar.wpc.spigot.objects.TableWrapper;
 
-public interface TableI
+public interface TableII
 {
-	
-	default boolean existI(WebPortalConnector plugin, String whereColumn, Object... object) 
+	default boolean existII(WebPortalConnector plugin, String whereColumn, Object... object) 
 	{
 		PreparedStatement preparedStatement = null;
 		ResultSet result = null;
@@ -22,7 +22,7 @@ public interface TableI
 		{
 			try 
 			{			
-				String sql = "SELECT `id` FROM `" + MysqlHandler.tableNameI 
+				String sql = "SELECT `id` FROM `" + MysqlHandler.tableNameII 
 						+ "` WHERE "+whereColumn+" LIMIT 1";
 		        preparedStatement = conn.prepareStatement(sql);
 		        int i = 1;
@@ -61,26 +61,26 @@ public interface TableI
 		return false;
 	}
 	
-	default boolean createI(WebPortalConnector plugin, Object object) 
+	default boolean createII(WebPortalConnector plugin, Object object) 
 	{
-		if(!(object instanceof PluginUser))
+		if(!(object instanceof PluginObject))
 		{
 			return false;
 		}
-		PluginUser ep = (PluginUser) object;
+		PluginObject ep = (PluginObject) object;
 		PreparedStatement preparedStatement = null;
 		Connection conn = plugin.getMysqlSetup().getConnection();
 		if (conn != null) {
 			try 
 			{
-				String sql = "INSERT INTO `" + MysqlHandler.tableNameI 
-						+ "`(`player_uuid`, `player_name`, `pw`, `isadmin`) " 
+				String sql = "INSERT INTO `" + MysqlHandler.tableNameII 
+						+ "`(`pluginname`, `aliasname`, `activ`, `tablejson`) " 
 						+ "VALUES(?, ?, ?, ?)";
 				preparedStatement = conn.prepareStatement(sql);
-		        preparedStatement.setString(1, ep.getUUID());
-		        preparedStatement.setString(2, ep.getName());
-		        preparedStatement.setString(3, ep.getPassword());
-		        preparedStatement.setBoolean(4, ep.isAdmin());
+		        preparedStatement.setString(1, ep.getPluginName());
+		        preparedStatement.setString(2, ep.getAliasName());
+		        preparedStatement.setBoolean(3, ep.isActiv());
+		        preparedStatement.setString(4, TableWrapper.convertToJSON(new TableWrapper(ep.getPluginTables())));
 		        
 		        
 		        preparedStatement.executeUpdate();
@@ -106,9 +106,9 @@ public interface TableI
 		return false;
 	}
 	
-	default boolean updateDataI(WebPortalConnector plugin, Object object, String whereColumn, Object... whereObject) 
+	default boolean updateDataII(WebPortalConnector plugin, Object object, String whereColumn, Object... whereObject) 
 	{
-		if(!(object instanceof PluginUser))
+		if(!(object instanceof PluginObject))
 		{
 			return false;
 		}
@@ -116,21 +116,21 @@ public interface TableI
 		{
 			return false;
 		}
-		PluginUser ep = (PluginUser) object;
+		PluginObject ep = (PluginObject) object;
 		PreparedStatement preparedStatement = null;
 		Connection conn = plugin.getMysqlSetup().getConnection();
 		if (conn != null) 
 		{
 			try 
 			{
-				String data = "UPDATE `" + MysqlHandler.tableNameI
-						+ "` SET `player_uuid` = ?, `player_name` = ?, `pw` = ?, `isadmin` = ?" 
+				String data = "UPDATE `" + MysqlHandler.tableNameII
+						+ "` SET `playername` = ?, `aliasname` = ?, `activ` = ?, `tablejson` = ?" 
 						+ " WHERE "+whereColumn;
 				preparedStatement = conn.prepareStatement(data);
-				preparedStatement.setString(1, ep.getUUID());
-		        preparedStatement.setString(2, ep.getName());
-		        preparedStatement.setString(3, ep.getPassword());
-		        preparedStatement.setBoolean(4, ep.isAdmin());
+				preparedStatement.setString(1, ep.getPluginName());
+				preparedStatement.setString(2, ep.getAliasName());
+				preparedStatement.setBoolean(3, ep.isActiv());
+		        preparedStatement.setString(4, TableWrapper.convertToJSON(new TableWrapper(ep.getPluginTables())));
 		        int i = 5;
 		        for(Object o : whereObject)
 		        {
@@ -157,7 +157,7 @@ public interface TableI
         return false;
 	}
 	
-	default Object getDataI(WebPortalConnector plugin, String whereColumn, Object... whereObject)
+	default Object getDataII(WebPortalConnector plugin, String whereColumn, Object... whereObject)
 	{
 		PreparedStatement preparedStatement = null;
 		ResultSet result = null;
@@ -166,7 +166,7 @@ public interface TableI
 		{
 			try 
 			{			
-				String sql = "SELECT * FROM `" + MysqlHandler.tableNameI 
+				String sql = "SELECT * FROM `" + MysqlHandler.tableNameII 
 						+ "` WHERE "+whereColumn+" LIMIT 1";
 		        preparedStatement = conn.prepareStatement(sql);
 		        int i = 1;
@@ -179,11 +179,11 @@ public interface TableI
 		        result = preparedStatement.executeQuery();
 		        while (result.next()) 
 		        {
-		        	return new PluginUser(
-		        			result.getString("player_uuid"),
-		        			result.getString("player_name"),
-		        			result.getString("pw"),
-		        			result.getBoolean("isadmin"));
+		        	return new PluginObject(
+		        			result.getString("pluginname"),
+		        			result.getString("aliasname"),
+		        			result.getBoolean("activ"),
+		        			TableWrapper.convertToList(result.getString("tablejson")));
 		        }
 		    } catch (SQLException e) 
 			{
@@ -209,13 +209,13 @@ public interface TableI
 		return null;
 	}
 	
-	default boolean deleteDataI(WebPortalConnector plugin, String whereColumn, Object... whereObject)
+	default boolean deleteDataII(WebPortalConnector plugin, String whereColumn, Object... whereObject)
 	{
 		PreparedStatement preparedStatement = null;
 		Connection conn = plugin.getMysqlSetup().getConnection();
 		try 
 		{
-			String sql = "DELETE FROM `" + MysqlHandler.tableNameI + "` WHERE "+whereColumn;
+			String sql = "DELETE FROM `" + MysqlHandler.tableNameII + "` WHERE "+whereColumn;
 			preparedStatement = conn.prepareStatement(sql);
 			int i = 1;
 	        for(Object o : whereObject)
@@ -242,7 +242,7 @@ public interface TableI
 		return false;
 	}
 	
-	default int lastIDI(WebPortalConnector plugin)
+	default int lastIDII(WebPortalConnector plugin)
 	{
 		PreparedStatement preparedStatement = null;
 		ResultSet result = null;
@@ -251,7 +251,7 @@ public interface TableI
 		{
 			try 
 			{			
-				String sql = "SELECT `id` FROM `" + MysqlHandler.tableNameI + "` ORDER BY `id` DESC LIMIT 1";
+				String sql = "SELECT `id` FROM `" + MysqlHandler.tableNameII + "` ORDER BY `id` DESC LIMIT 1";
 		        preparedStatement = conn.prepareStatement(sql);
 		        
 		        result = preparedStatement.executeQuery();
@@ -284,7 +284,7 @@ public interface TableI
 		return 0;
 	}
 	
-	default int countWhereIDI(WebPortalConnector plugin, String whereColumn, Object... whereObject)
+	default int countWhereIDII(WebPortalConnector plugin, String whereColumn, Object... whereObject)
 	{
 		PreparedStatement preparedStatement = null;
 		ResultSet result = null;
@@ -293,7 +293,7 @@ public interface TableI
 		{
 			try 
 			{			
-				String sql = "SELECT `id` FROM `" + MysqlHandler.tableNameI
+				String sql = "SELECT `id` FROM `" + MysqlHandler.tableNameII
 						+ "` WHERE "+whereColumn
 						+ " ORDER BY `id` DESC";
 		        preparedStatement = conn.prepareStatement(sql);
@@ -335,7 +335,7 @@ public interface TableI
 		return 0;
 	}
 	
-	default ArrayList<PluginUser> getListI(WebPortalConnector plugin, String orderByColumn,
+	default ArrayList<PluginObject> getListII(WebPortalConnector plugin, String orderByColumn,
 			int start, int end, String whereColumn, Object...whereObject)
 	{
 		PreparedStatement preparedStatement = null;
@@ -345,7 +345,7 @@ public interface TableI
 		{
 			try 
 			{			
-				String sql = "SELECT * FROM `" + MysqlHandler.tableNameI
+				String sql = "SELECT * FROM `" + MysqlHandler.tableNameII
 						+ "` WHERE "+whereColumn+" ORDER BY "+orderByColumn+" LIMIT "+start+", "+end;
 		        preparedStatement = conn.prepareStatement(sql);
 		        int i = 1;
@@ -355,14 +355,14 @@ public interface TableI
 		        	i++;
 		        }
 		        result = preparedStatement.executeQuery();
-		        ArrayList<PluginUser> list = new ArrayList<PluginUser>();
+		        ArrayList<PluginObject> list = new ArrayList<PluginObject>();
 		        while (result.next()) 
 		        {
-		        	PluginUser ep = new PluginUser(
-		        			result.getString("player_uuid"),
-		        			result.getString("player_name"),
-		        			result.getString("pw"),
-		        			result.getBoolean("isadmin"));
+		        	PluginObject ep = new PluginObject(
+		        			result.getString("pluginname"),
+		        			result.getString("aliasname"),
+		        			result.getBoolean("activ"),
+		        			TableWrapper.convertToList(result.getString("tablejson")));
 		        	list.add(ep);
 		        }
 		        return list;
@@ -390,7 +390,7 @@ public interface TableI
 		return null;
 	}
 	
-	default ArrayList<PluginUser> getTopI(WebPortalConnector plugin, String orderByColumn, int start, int end)
+	default ArrayList<PluginObject> getTopII(WebPortalConnector plugin, String orderByColumn, int start, int end)
 	{
 		PreparedStatement preparedStatement = null;
 		ResultSet result = null;
@@ -399,19 +399,19 @@ public interface TableI
 		{
 			try 
 			{			
-				String sql = "SELECT * FROM `" + MysqlHandler.tableNameI 
+				String sql = "SELECT * FROM `" + MysqlHandler.tableNameII 
 						+ "` ORDER BY "+orderByColumn+" LIMIT "+start+", "+end;
 		        preparedStatement = conn.prepareStatement(sql);
 		        
 		        result = preparedStatement.executeQuery();
-		        ArrayList<PluginUser> list = new ArrayList<PluginUser>();
+		        ArrayList<PluginObject> list = new ArrayList<PluginObject>();
 		        while (result.next()) 
 		        {
-		        	PluginUser ep = new PluginUser(
-		        			result.getString("player_uuid"),
-		        			result.getString("player_name"),
-		        			result.getString("pw"),
-		        			result.getBoolean("isadmin"));
+		        	PluginObject ep = new PluginObject(
+		        			result.getString("pluginname"),
+		        			result.getString("aliasname"),
+		        			result.getBoolean("activ"),
+		        			TableWrapper.convertToList(result.getString("tablejson")));
 		        	list.add(ep);
 		        }
 		        return list;
@@ -439,7 +439,7 @@ public interface TableI
 		return null;
 	}
 	
-	default ArrayList<PluginUser> getAllListAtI(WebPortalConnector plugin, String orderByColumn,
+	default ArrayList<PluginObject> getAllListAtII(WebPortalConnector plugin, String orderByColumn,
 			String whereColumn, Object...whereObject)
 	{
 		PreparedStatement preparedStatement = null;
@@ -449,7 +449,7 @@ public interface TableI
 		{
 			try 
 			{			
-				String sql = "SELECT * FROM `" + MysqlHandler.tableNameI
+				String sql = "SELECT * FROM `" + MysqlHandler.tableNameII
 						+ "` WHERE "+whereColumn+" ORDER BY "+orderByColumn;
 		        preparedStatement = conn.prepareStatement(sql);
 		        int i = 1;
@@ -459,14 +459,14 @@ public interface TableI
 		        	i++;
 		        }
 		        result = preparedStatement.executeQuery();
-		        ArrayList<PluginUser> list = new ArrayList<PluginUser>();
+		        ArrayList<PluginObject> list = new ArrayList<PluginObject>();
 		        while (result.next()) 
 		        {
-		        	PluginUser ep = new PluginUser(
-		        			result.getString("player_uuid"),
-		        			result.getString("player_name"),
-		        			result.getString("pw"),
-		        			result.getBoolean("isadmin"));
+		        	PluginObject ep = new PluginObject(
+		        			result.getString("pluginname"),
+		        			result.getString("aliasname"),
+		        			result.getBoolean("activ"),
+		        			TableWrapper.convertToList(result.getString("tablejson")));
 		        	list.add(ep);
 		        }
 		        return list;

@@ -1,49 +1,18 @@
 package main.java.me.avankziar.wpc.spigot.objects;
 
-import java.util.List;
-
-/*
- * Here an UserObject from a other plugin
- */
-
 public class PluginUser
 {
-	private int id;
 	private String uuid;
 	private String name;
-	private double balance;
-	private boolean moneyPlayerFlow;
-	private boolean moneyBankFlow;
-	private boolean generalMessage;
-	private String pendingInvite;
-	private boolean frozen; //To Freeze a Playeraccount
-	private List<String> bankAccountNumber;
+	private String password;
+	private boolean admin;
 	
-	public PluginUser(int id, String uuid, String name,
-			double balance, List<String> bankAccountNumber,
-			boolean moneyPlayerFlow, boolean moneyBankFlow, boolean generalMessage,
-			String pendingInvite, boolean frozen)
+	public PluginUser(String uuid, String name, String password, boolean admin)
 	{
-		setId(id);
 		setUUID(uuid);
 		setName(name);
-		setBalance(balance);
-		setBankAccountNumber(bankAccountNumber);
-		setMoneyPlayerFlow(moneyPlayerFlow);
-		setMoneyBankFlow(moneyBankFlow);
-		setGeneralMessage(generalMessage);
-		setPendingInvite(pendingInvite);
-		setFrozen(frozen);
-	}
-
-	public int getId()
-	{
-		return id;
-	}
-
-	public void setId(int id)
-	{
-		this.id = id;
+		setPassword(password);
+		setAdmin(admin);
 	}
 	
 	public String getUUID()
@@ -66,73 +35,23 @@ public class PluginUser
 		this.name = name;
 	}
 
-	public double getBalance()
+	public String getPassword()
 	{
-		return balance;
+		return password;
 	}
 
-	public void setBalance(double balance)
+	public void setPassword(String password)
 	{
-		this.balance = balance;
+		this.password = password;
 	}
 
-	public List<String> getBankAccountNumber()
+	public boolean isAdmin()
 	{
-		return bankAccountNumber;
+		return admin;
 	}
 
-	public void setBankAccountNumber(List<String> bankAccountNumber)
+	public void setAdmin(boolean admin)
 	{
-		this.bankAccountNumber = bankAccountNumber;
-	}
-	
-	public boolean isMoneyPlayerFlow()
-	{
-		return moneyPlayerFlow;
-	}
-
-	public void setMoneyPlayerFlow(boolean moneyPlayerFlow)
-	{
-		this.moneyPlayerFlow = moneyPlayerFlow;
-	}
-
-	public boolean isMoneyBankFlow()
-	{
-		return moneyBankFlow;
-	}
-
-	public void setMoneyBankFlow(boolean moneyBankFlow)
-	{
-		this.moneyBankFlow = moneyBankFlow;
-	}
-
-	public boolean isGeneralMessage()
-	{
-		return generalMessage;
-	}
-
-	public void setGeneralMessage(boolean generalMessage)
-	{
-		this.generalMessage = generalMessage;
-	}
-
-	public String getPendingInvite()
-	{
-		return pendingInvite;
-	}
-
-	public void setPendingInvite(String pendingInvite)
-	{
-		this.pendingInvite = pendingInvite;
-	}
-
-	public boolean isFrozen()
-	{
-		return frozen;
-	}
-
-	public void setFrozen(boolean frozen)
-	{
-		this.frozen = frozen;
+		this.admin = admin;
 	}
 }

@@ -5,37 +5,51 @@ import java.util.LinkedHashMap;
 import org.bukkit.entity.Player;
 
 import main.java.me.avankziar.wpc.spigot.WebPortalConnector;
+import main.java.me.avankziar.wpc.spigot.assistance.SHA256Cryption;
 import main.java.me.avankziar.wpc.spigot.database.YamlHandler;
 
 public class PluginSettings
 {
 	private boolean bungee;
-	private boolean mysql;
+	private boolean isMainServer;
 	private boolean debug;
+	private String cryptsalt;
+	private boolean sendNewPlayerAInfo;
+	private String webURL;
+	private int javaTaskCheck;
 	private LinkedHashMap<String, String> commands = new LinkedHashMap<>(); //To save commandstrings
 	
 	public static PluginSettings settings;
 	
 	public PluginSettings(){}
 	
-	public PluginSettings(boolean bungee, boolean mysql, boolean debug)
+	public PluginSettings(boolean bungee, boolean isMainServer, boolean debug,
+			String cyptSalt, String webURL,
+			boolean sendNewPlayerAInfo,
+			int javaTaskCheck)
 	{
 		setBungee(bungee);
-		setMysql(mysql);
+		setMainServer(isMainServer);
 		setDebug(debug);
+		setSendNewPlayerAInfo(sendNewPlayerAInfo);
+		setWebURL(webURL);
+		setJavaTaskCheck(javaTaskCheck);
 	}
 	
 	public static void initSettings(WebPortalConnector plugin)
 	{
 		YamlHandler yh = plugin.getYamlHandler();
 		boolean bungee = plugin.getYamlHandler().getConfig().getBoolean("Bungee", false);
-		boolean mysql = false;
-		if(plugin.getMysqlSetup().getConnection() != null)
-		{
-			mysql = true;
-		}
-		boolean debug = yh.getConfig().getBoolean("Use.DebuggingMode", false);
-		settings = new PluginSettings(bungee, mysql, debug);
+		boolean isMainServer = plugin.getYamlHandler().getConfig().getBoolean("IsMainServer", false);
+		boolean debug = yh.getConfig().getBoolean("DebugMode", false);
+		String cryptSalt = yh.getConfig().getString("CryptSalt", SHA256Cryption.generateSalt());
+		boolean sendNewPlayerAInfo = yh.getConfig().getBoolean("SendNewPlayerAInfo", true);
+		String webURL = yh.getConfig().getString("WebURL", "https://yourweb.de./blub.php");
+		int javaTaskCheck = yh.getConfig().getInt("JavaTaskCheck", 20);
+		settings = new PluginSettings(bungee, isMainServer, debug,
+				cryptSalt, webURL,
+				sendNewPlayerAInfo,
+				javaTaskCheck);
 		plugin.getLogger().info("Plugin Settings init...");
 	}
 	
@@ -60,17 +74,7 @@ public class PluginSettings
 			}
 		}
 	}
-
-	public boolean isMysql()
-	{
-		return mysql;
-	}
-
-	public void setMysql(boolean mysql)
-	{
-		this.mysql = mysql;
-	}
-
+	
 	public boolean isBungee()
 	{
 		return bungee;
@@ -110,5 +114,55 @@ public class PluginSettings
 		{
 			commands.put(key, commandString);
 		}
+	}
+
+	public boolean isSendNewPlayerAInfo()
+	{
+		return sendNewPlayerAInfo;
+	}
+
+	public void setSendNewPlayerAInfo(boolean sendNewPlayerAInfo)
+	{
+		this.sendNewPlayerAInfo = sendNewPlayerAInfo;
+	}
+
+	public String getCryptSalt()
+	{
+		return cryptsalt;
+	}
+
+	public void setCryptSalt(String cryptsalt)
+	{
+		this.cryptsalt = cryptsalt;
+	}
+
+	public String getWebURL()
+	{
+		return webURL;
+	}
+
+	public void setWebURL(String webURL)
+	{
+		this.webURL = webURL;
+	}
+
+	public boolean isMainServer()
+	{
+		return isMainServer;
+	}
+
+	public void setMainServer(boolean isMainServer)
+	{
+		this.isMainServer = isMainServer;
+	}
+
+	public int getJavaTaskCheck()
+	{
+		return javaTaskCheck;
+	}
+
+	public void setJavaTaskCheck(int javaTaskCheck)
+	{
+		this.javaTaskCheck = javaTaskCheck;
 	}
 }

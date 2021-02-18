@@ -20,8 +20,9 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import main.java.me.avankziar.wpc.spigot.assistance.BackgroundTask;
 import main.java.me.avankziar.wpc.spigot.assistance.Utility;
-import main.java.me.avankziar.wpc.spigot.cmd.BaseCommandExecutor;
 import main.java.me.avankziar.wpc.spigot.cmd.TABCompletion;
+import main.java.me.avankziar.wpc.spigot.cmd.WPCCommandExecutor;
+import main.java.me.avankziar.wpc.spigot.cmdtree.ArgumentConstructor;
 import main.java.me.avankziar.wpc.spigot.cmdtree.ArgumentModule;
 import main.java.me.avankziar.wpc.spigot.cmdtree.BaseConstructor;
 import main.java.me.avankziar.wpc.spigot.cmdtree.CommandConstructor;
@@ -29,6 +30,10 @@ import main.java.me.avankziar.wpc.spigot.database.MysqlHandler;
 import main.java.me.avankziar.wpc.spigot.database.MysqlSetup;
 import main.java.me.avankziar.wpc.spigot.database.YamlHandler;
 import main.java.me.avankziar.wpc.spigot.database.YamlManager;
+import main.java.me.avankziar.wpc.spigot.listener.AddPluginSupportListener;
+import main.java.me.avankziar.wpc.spigot.listener.JavaPHPTaskEndListener;
+import main.java.me.avankziar.wpc.spigot.listener.JoinListener;
+import main.java.me.avankziar.wpc.spigot.metrics.Metrics;
 import main.java.me.avankziar.wpc.spigot.objects.PluginSettings;
 import main.java.me.avankziar.wpc.spigot.permission.BypassPermission;
 import main.java.me.avankziar.wpc.spigot.permission.KeyHandler;
@@ -37,7 +42,7 @@ public class WebPortalConnector extends JavaPlugin
 {
 	public static Logger log;
 	private static WebPortalConnector plugin;
-	public String pluginName = "Base";
+	public String pluginName = "WebPortalConnector";
 	private YamlHandler yamlHandler;
 	private YamlManager yamlManager;
 	private MysqlSetup mysqlSetup;
@@ -50,23 +55,24 @@ public class WebPortalConnector extends JavaPlugin
 	private LinkedHashMap<String, ArgumentModule> argumentMap = new LinkedHashMap<>();
 	private ArrayList<String> players = new ArrayList<>();
 	
-	public static String infoCommandPath = "CmdBase";
+	public static String infoCommandPath = "CmdWpc";
 	public static String infoCommand = "/";
+	public static String baseCommandI = "wpc";
 	
 	public void onEnable()
 	{
 		plugin = this;
 		log = getLogger();
 		
-		//https://patorjk.com/software/taag/#p=display&f=ANSI%20Shadow&t=Base
-		log.info("  | API-Version: "+plugin.getDescription().getAPIVersion());
-		log.info("  | Author: "+plugin.getDescription().getAuthors().toString());
-		log.info("  | Plugin Website: "+plugin.getDescription().getWebsite());
-		log.info("  | Depend Plugins: "+plugin.getDescription().getDepend().toString());
-		log.info("  | SoftDepend Plugins: "+plugin.getDescription().getSoftDepend().toString());
-		log.info("  | LoadBefore: "+plugin.getDescription().getLoadBefore().toString());
+		//https://patorjk.com/software/taag/#p=display&f=ANSI%20Shadow&t=WPC
+		log.info(" ██╗    ██╗██████╗  ██████╗ | API-Version: "+plugin.getDescription().getAPIVersion());
+		log.info(" ██║    ██║██╔══██╗██╔════╝ | Author: "+plugin.getDescription().getAuthors().toString());
+		log.info(" ██║ █╗ ██║██████╔╝██║      | Plugin Website: "+plugin.getDescription().getWebsite());
+		log.info(" ██║███╗██║██╔═══╝ ██║      | Depend Plugins: "+plugin.getDescription().getDepend().toString());
+		log.info(" ╚███╔███╔╝██║     ╚██████╗ | SoftDepend Plugins: "+plugin.getDescription().getSoftDepend().toString());
+		log.info("  ╚══╝╚══╝ ╚═╝      ╚═════╝ | LoadBefore: "+plugin.getDescription().getLoadBefore().toString());
 		
-		yamlHandler = new YamlHandler(this);
+		yamlHandler = new YamlHandler(plugin);
 		
 		if (yamlHandler.getConfig().getBoolean("Mysql.Status", false) == true)
 		{
@@ -75,24 +81,25 @@ public class WebPortalConnector extends JavaPlugin
 		} else
 		{
 			log.severe("MySQL is not set in the Plugin " + pluginName + "!");
-			Bukkit.getPluginManager().getPlugin(pluginName).getPluginLoader().disablePlugin(this);
+			Bukkit.getPluginManager().getPlugin(pluginName).getPluginLoader().disablePlugin(plugin);
 			return;
 		}
 		
 		PluginSettings.initSettings(plugin);
 		
 		utility = new Utility(plugin);
-		backgroundTask = new BackgroundTask(this);
+		backgroundTask = new BackgroundTask(plugin);
 		
 		setupBypassPerm();
 		setupCommandTree();
 		setupListeners();
+		setupBstats();
 	}
 	
 	public void onDisable()
 	{
-		Bukkit.getScheduler().cancelTasks(this);
-		HandlerList.unregisterAll(this);
+		Bukkit.getScheduler().cancelTasks(plugin);
+		HandlerList.unregisterAll(plugin);
 		if (yamlHandler.getConfig().getBoolean("Mysql.Status", false) == true)
 		{
 			if (mysqlSetup.getConnection() != null) 
@@ -145,21 +152,28 @@ public class WebPortalConnector extends JavaPlugin
 	
 	private void setupCommandTree()
 	{		
-		infoCommand += plugin.getYamlHandler().getCommands().getString("base.Name");
-		CommandConstructor base = new CommandConstructor("base", false);
+		infoCommand += plugin.getYamlHandler().getCommands().getString("wpc.Name");
 		
-		registerCommand(base.getPath(), base.getName());
-		getCommand(base.getName()).setExecutor(new BaseCommandExecutor(plugin, base));
-		getCommand(base.getName()).setTabCompleter(new TABCompletion(plugin));
-		PluginSettings.settings.addCommands(KeyHandler.BASE, base.getCommandString().trim());
+		ArgumentConstructor htr = new ArgumentConstructor(baseCommandI+"_htr", 0, 0, 0, true, null);
+		PluginSettings.settings.addCommands(KeyHandler.WPC_HTR, htr.getCommandString().trim());
+		ArgumentConstructor register = new ArgumentConstructor(baseCommandI+"_register", 0, 1, 2, false, null);
+		PluginSettings.settings.addCommands(KeyHandler.WPC_REGISTER, register.getCommandString().trim());
 		
-		addingHelps(base);
+		CommandConstructor wpc = new CommandConstructor("wpc", false,
+				htr);
+		
+		registerCommand(wpc.getPath(), wpc.getName());
+		getCommand(wpc.getName()).setExecutor(new WPCCommandExecutor(plugin, wpc));
+		getCommand(wpc.getName()).setTabCompleter(new TABCompletion(plugin));
+		PluginSettings.settings.addCommands(KeyHandler.WPC, wpc.getCommandString().trim());
+		
+		addingHelps(wpc,
+						htr, register);
 	}
 	
 	public void setupBypassPerm()
 	{
-		String path = "Bypass.";
-		BypassPermission.BASE = yamlHandler.getCommands().getString(path+"Base");
+		BypassPermission.init(plugin);
 	}
 	
 	public ArrayList<BaseConstructor> getHelpList()
@@ -297,7 +311,9 @@ public class WebPortalConnector extends JavaPlugin
 	public void setupListeners()
 	{
 		PluginManager pm = getServer().getPluginManager();
-		//pm.registerEvents(new BackListener(plugin), plugin);
+		pm.registerEvents(new JoinListener(plugin), plugin);
+		pm.registerEvents(new AddPluginSupportListener(), plugin);
+		pm.registerEvents(new JavaPHPTaskEndListener(plugin), plugin);
 	}
 	
 	public boolean reload() throws IOException
@@ -309,10 +325,6 @@ public class WebPortalConnector extends JavaPlugin
 		if(yamlHandler.getConfig().getBoolean("Mysql.Status", false))
 		{
 			mysqlSetup.closeConnection();
-			if(!mysqlHandler.loadMysqlHandler())
-			{
-				return false;
-			}
 			if(!mysqlSetup.loadMysqlSetup())
 			{
 				return false;
@@ -332,5 +344,11 @@ public class WebPortalConnector extends JavaPlugin
 		}
 		log.info(pluginName+" hook with "+externPluginName);
 		return true;
+	}
+	
+	public void setupBstats()
+	{
+		int pluginId = 10344;
+        new Metrics(this, pluginId);
 	}
 }

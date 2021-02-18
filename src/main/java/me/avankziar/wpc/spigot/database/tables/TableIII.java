@@ -8,12 +8,11 @@ import java.util.ArrayList;
 
 import main.java.me.avankziar.wpc.spigot.WebPortalConnector;
 import main.java.me.avankziar.wpc.spigot.database.MysqlHandler;
-import main.java.me.avankziar.wpc.spigot.objects.PluginUser;
+import main.java.me.avankziar.wpc.spigot.objects.JavaTask;
 
-public interface TableI
+public interface TableIII
 {
-	
-	default boolean existI(WebPortalConnector plugin, String whereColumn, Object... object) 
+	default boolean existIII(WebPortalConnector plugin, String whereColumn, Object... object) 
 	{
 		PreparedStatement preparedStatement = null;
 		ResultSet result = null;
@@ -22,7 +21,7 @@ public interface TableI
 		{
 			try 
 			{			
-				String sql = "SELECT `id` FROM `" + MysqlHandler.tableNameI 
+				String sql = "SELECT `id` FROM `" + MysqlHandler.tableNameIII 
 						+ "` WHERE "+whereColumn+" LIMIT 1";
 		        preparedStatement = conn.prepareStatement(sql);
 		        int i = 1;
@@ -61,27 +60,28 @@ public interface TableI
 		return false;
 	}
 	
-	default boolean createI(WebPortalConnector plugin, Object object) 
+	default boolean createIII(WebPortalConnector plugin, Object object) 
 	{
-		if(!(object instanceof PluginUser))
+		if(!(object instanceof JavaTask))
 		{
 			return false;
 		}
-		PluginUser ep = (PluginUser) object;
+		JavaTask ep = (JavaTask) object;
 		PreparedStatement preparedStatement = null;
 		Connection conn = plugin.getMysqlSetup().getConnection();
 		if (conn != null) {
 			try 
 			{
-				String sql = "INSERT INTO `" + MysqlHandler.tableNameI 
-						+ "`(`player_uuid`, `player_name`, `pw`, `isadmin`) " 
-						+ "VALUES(?, ?, ?, ?)";
+				String sql = "INSERT INTO `" + MysqlHandler.tableNameIII 
+						+ "`(`timestamp_unix`, `pluginname`, `methodejson`, `isopen`, `wassuccessful`, `errormessage`) " 
+						+ "VALUES(?, ?, ?, ?, ?, ?)";
 				preparedStatement = conn.prepareStatement(sql);
-		        preparedStatement.setString(1, ep.getUUID());
-		        preparedStatement.setString(2, ep.getName());
-		        preparedStatement.setString(3, ep.getPassword());
-		        preparedStatement.setBoolean(4, ep.isAdmin());
-		        
+		        preparedStatement.setLong(1, ep.getTimeStamp());
+		        preparedStatement.setString(2, ep.getPluginName());
+		        preparedStatement.setString(3, JavaTask.convertToJson(ep.getTaskJson()));
+		        preparedStatement.setBoolean(4, ep.isOpen());
+		        preparedStatement.setBoolean(5, ep.isWasSuccessful());
+		        preparedStatement.setString(6, ep.getErrormessage());
 		        
 		        preparedStatement.executeUpdate();
 		        return true;
@@ -106,9 +106,9 @@ public interface TableI
 		return false;
 	}
 	
-	default boolean updateDataI(WebPortalConnector plugin, Object object, String whereColumn, Object... whereObject) 
+	default boolean updateDataIII(WebPortalConnector plugin, Object object, String whereColumn, Object... whereObject) 
 	{
-		if(!(object instanceof PluginUser))
+		if(!(object instanceof JavaTask))
 		{
 			return false;
 		}
@@ -116,22 +116,25 @@ public interface TableI
 		{
 			return false;
 		}
-		PluginUser ep = (PluginUser) object;
+		JavaTask ep = (JavaTask) object;
 		PreparedStatement preparedStatement = null;
 		Connection conn = plugin.getMysqlSetup().getConnection();
 		if (conn != null) 
 		{
 			try 
 			{
-				String data = "UPDATE `" + MysqlHandler.tableNameI
-						+ "` SET `player_uuid` = ?, `player_name` = ?, `pw` = ?, `isadmin` = ?" 
+				String data = "UPDATE `" + MysqlHandler.tableNameIII
+						+ "` SET `timestamp_unix` = ?, `pluginname` = ?, `methodejson` = ?,"
+						+ " `isopen` = ?, `wassuccessful` = ?, `errormessage` = ?" 
 						+ " WHERE "+whereColumn;
 				preparedStatement = conn.prepareStatement(data);
-				preparedStatement.setString(1, ep.getUUID());
-		        preparedStatement.setString(2, ep.getName());
-		        preparedStatement.setString(3, ep.getPassword());
-		        preparedStatement.setBoolean(4, ep.isAdmin());
-		        int i = 5;
+				preparedStatement.setLong(1, ep.getTimeStamp());
+				preparedStatement.setString(2, ep.getPluginName());
+		        preparedStatement.setString(3, JavaTask.convertToJson(ep.getTaskJson()));
+		        preparedStatement.setBoolean(4, ep.isOpen());
+		        preparedStatement.setBoolean(5, ep.isWasSuccessful());
+		        preparedStatement.setString(6, ep.getErrormessage());
+		        int i = 7;
 		        for(Object o : whereObject)
 		        {
 		        	preparedStatement.setObject(i, o);
@@ -157,7 +160,7 @@ public interface TableI
         return false;
 	}
 	
-	default Object getDataI(WebPortalConnector plugin, String whereColumn, Object... whereObject)
+	default Object getDataIII(WebPortalConnector plugin, String whereColumn, Object... whereObject)
 	{
 		PreparedStatement preparedStatement = null;
 		ResultSet result = null;
@@ -166,7 +169,7 @@ public interface TableI
 		{
 			try 
 			{			
-				String sql = "SELECT * FROM `" + MysqlHandler.tableNameI 
+				String sql = "SELECT * FROM `" + MysqlHandler.tableNameIII 
 						+ "` WHERE "+whereColumn+" LIMIT 1";
 		        preparedStatement = conn.prepareStatement(sql);
 		        int i = 1;
@@ -179,11 +182,13 @@ public interface TableI
 		        result = preparedStatement.executeQuery();
 		        while (result.next()) 
 		        {
-		        	return new PluginUser(
-		        			result.getString("player_uuid"),
-		        			result.getString("player_name"),
-		        			result.getString("pw"),
-		        			result.getBoolean("isadmin"));
+		        	return new JavaTask(result.getInt("id"),
+		        			result.getLong("timestamp_unix"),
+		        			result.getString("pluginname"),
+		        			JavaTask.convertToMap(result.getString("methodejson")),
+		        			result.getBoolean("isopen"),
+		        			result.getBoolean("wassuccessful"),
+		        			result.getString("errormessage"));
 		        }
 		    } catch (SQLException e) 
 			{
@@ -209,13 +214,13 @@ public interface TableI
 		return null;
 	}
 	
-	default boolean deleteDataI(WebPortalConnector plugin, String whereColumn, Object... whereObject)
+	default boolean deleteDataIII(WebPortalConnector plugin, String whereColumn, Object... whereObject)
 	{
 		PreparedStatement preparedStatement = null;
 		Connection conn = plugin.getMysqlSetup().getConnection();
 		try 
 		{
-			String sql = "DELETE FROM `" + MysqlHandler.tableNameI + "` WHERE "+whereColumn;
+			String sql = "DELETE FROM `" + MysqlHandler.tableNameIII + "` WHERE "+whereColumn;
 			preparedStatement = conn.prepareStatement(sql);
 			int i = 1;
 	        for(Object o : whereObject)
@@ -242,7 +247,7 @@ public interface TableI
 		return false;
 	}
 	
-	default int lastIDI(WebPortalConnector plugin)
+	default int lastIDIII(WebPortalConnector plugin)
 	{
 		PreparedStatement preparedStatement = null;
 		ResultSet result = null;
@@ -251,7 +256,7 @@ public interface TableI
 		{
 			try 
 			{			
-				String sql = "SELECT `id` FROM `" + MysqlHandler.tableNameI + "` ORDER BY `id` DESC LIMIT 1";
+				String sql = "SELECT `id` FROM `" + MysqlHandler.tableNameIII + "` ORDER BY `id` DESC LIMIT 1";
 		        preparedStatement = conn.prepareStatement(sql);
 		        
 		        result = preparedStatement.executeQuery();
@@ -284,7 +289,7 @@ public interface TableI
 		return 0;
 	}
 	
-	default int countWhereIDI(WebPortalConnector plugin, String whereColumn, Object... whereObject)
+	default int countWhereIDIII(WebPortalConnector plugin, String whereColumn, Object... whereObject)
 	{
 		PreparedStatement preparedStatement = null;
 		ResultSet result = null;
@@ -293,7 +298,7 @@ public interface TableI
 		{
 			try 
 			{			
-				String sql = "SELECT `id` FROM `" + MysqlHandler.tableNameI
+				String sql = "SELECT `id` FROM `" + MysqlHandler.tableNameIII
 						+ "` WHERE "+whereColumn
 						+ " ORDER BY `id` DESC";
 		        preparedStatement = conn.prepareStatement(sql);
@@ -335,7 +340,7 @@ public interface TableI
 		return 0;
 	}
 	
-	default ArrayList<PluginUser> getListI(WebPortalConnector plugin, String orderByColumn,
+	default ArrayList<JavaTask> getListIII(WebPortalConnector plugin, String orderByColumn,
 			int start, int end, String whereColumn, Object...whereObject)
 	{
 		PreparedStatement preparedStatement = null;
@@ -345,7 +350,7 @@ public interface TableI
 		{
 			try 
 			{			
-				String sql = "SELECT * FROM `" + MysqlHandler.tableNameI
+				String sql = "SELECT * FROM `" + MysqlHandler.tableNameIII
 						+ "` WHERE "+whereColumn+" ORDER BY "+orderByColumn+" LIMIT "+start+", "+end;
 		        preparedStatement = conn.prepareStatement(sql);
 		        int i = 1;
@@ -355,14 +360,16 @@ public interface TableI
 		        	i++;
 		        }
 		        result = preparedStatement.executeQuery();
-		        ArrayList<PluginUser> list = new ArrayList<PluginUser>();
+		        ArrayList<JavaTask> list = new ArrayList<JavaTask>();
 		        while (result.next()) 
 		        {
-		        	PluginUser ep = new PluginUser(
-		        			result.getString("player_uuid"),
-		        			result.getString("player_name"),
-		        			result.getString("pw"),
-		        			result.getBoolean("isadmin"));
+		        	JavaTask ep = new JavaTask(result.getInt("id"),
+		        			result.getLong("timestamp_unix"),
+		        			result.getString("pluginname"),
+		        			JavaTask.convertToMap(result.getString("methodejson")),
+		        			result.getBoolean("isopen"),
+		        			result.getBoolean("wassuccessful"),
+		        			result.getString("errormessage"));
 		        	list.add(ep);
 		        }
 		        return list;
@@ -390,7 +397,7 @@ public interface TableI
 		return null;
 	}
 	
-	default ArrayList<PluginUser> getTopI(WebPortalConnector plugin, String orderByColumn, int start, int end)
+	default ArrayList<JavaTask> getTopIII(WebPortalConnector plugin, String orderByColumn, int start, int end)
 	{
 		PreparedStatement preparedStatement = null;
 		ResultSet result = null;
@@ -399,19 +406,21 @@ public interface TableI
 		{
 			try 
 			{			
-				String sql = "SELECT * FROM `" + MysqlHandler.tableNameI 
+				String sql = "SELECT * FROM `" + MysqlHandler.tableNameIII 
 						+ "` ORDER BY "+orderByColumn+" LIMIT "+start+", "+end;
 		        preparedStatement = conn.prepareStatement(sql);
 		        
 		        result = preparedStatement.executeQuery();
-		        ArrayList<PluginUser> list = new ArrayList<PluginUser>();
+		        ArrayList<JavaTask> list = new ArrayList<JavaTask>();
 		        while (result.next()) 
 		        {
-		        	PluginUser ep = new PluginUser(
-		        			result.getString("player_uuid"),
-		        			result.getString("player_name"),
-		        			result.getString("pw"),
-		        			result.getBoolean("isadmin"));
+		        	JavaTask ep = new JavaTask(result.getInt("id"),
+		        			result.getLong("timestamp_unix"),
+		        			result.getString("pluginname"),
+		        			JavaTask.convertToMap(result.getString("methodejson")),
+		        			result.getBoolean("isopen"),
+		        			result.getBoolean("wassuccessful"),
+		        			result.getString("errormessage"));
 		        	list.add(ep);
 		        }
 		        return list;
@@ -439,7 +448,7 @@ public interface TableI
 		return null;
 	}
 	
-	default ArrayList<PluginUser> getAllListAtI(WebPortalConnector plugin, String orderByColumn,
+	default ArrayList<JavaTask> getAllListAtIII(WebPortalConnector plugin, String orderByColumn,
 			String whereColumn, Object...whereObject)
 	{
 		PreparedStatement preparedStatement = null;
@@ -449,7 +458,7 @@ public interface TableI
 		{
 			try 
 			{			
-				String sql = "SELECT * FROM `" + MysqlHandler.tableNameI
+				String sql = "SELECT * FROM `" + MysqlHandler.tableNameIII
 						+ "` WHERE "+whereColumn+" ORDER BY "+orderByColumn;
 		        preparedStatement = conn.prepareStatement(sql);
 		        int i = 1;
@@ -459,14 +468,16 @@ public interface TableI
 		        	i++;
 		        }
 		        result = preparedStatement.executeQuery();
-		        ArrayList<PluginUser> list = new ArrayList<PluginUser>();
+		        ArrayList<JavaTask> list = new ArrayList<JavaTask>();
 		        while (result.next()) 
 		        {
-		        	PluginUser ep = new PluginUser(
-		        			result.getString("player_uuid"),
-		        			result.getString("player_name"),
-		        			result.getString("pw"),
-		        			result.getBoolean("isadmin"));
+		        	JavaTask ep = new JavaTask(result.getInt("id"),
+		        			result.getLong("timestamp_unix"),
+		        			result.getString("pluginname"),
+		        			JavaTask.convertToMap(result.getString("methodejson")),
+		        			result.getBoolean("isopen"),
+		        			result.getBoolean("wassuccessful"),
+		        			result.getString("errormessage"));
 		        	list.add(ep);
 		        }
 		        return list;

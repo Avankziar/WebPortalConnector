@@ -21,15 +21,15 @@ import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.HoverEvent;
 import net.md_5.bungee.api.chat.TextComponent;
 
-public class BaseCommandExecutor implements CommandExecutor
+public class WPCCommandExecutor implements CommandExecutor
 {
 	private WebPortalConnector plugin;
 	private static CommandConstructor cc;
 	
-	public BaseCommandExecutor(WebPortalConnector plugin, CommandConstructor cc)
+	public WPCCommandExecutor(WebPortalConnector plugin, CommandConstructor cc)
 	{
 		this.plugin = plugin;
-		BaseCommandExecutor.cc = cc;
+		WPCCommandExecutor.cc = cc;
 	}
 	
 	@Override

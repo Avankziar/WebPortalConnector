@@ -7,6 +7,7 @@ import java.util.List;
 
 import org.bukkit.configuration.file.YamlConfiguration;
 
+import main.java.me.avankziar.wpc.spigot.assistance.SHA256Cryption;
 import main.java.me.avankziar.wpc.spigot.database.Language.ISO639_2B;
 
 public class YamlManager
@@ -112,47 +113,97 @@ public class YamlManager
 	
 	public void initConfig() //INFO:Config
 	{
-		/*
-		 * The normale single path. In the config make it no sense to add other language as English
-		 * But the ISO639_2B is here the default language from this plugin!
-		 */
-		configKeys.put("ServerName"
+		configKeys.put("Bungee"
 				, new Language(new ISO639_2B[] {ISO639_2B.GER}, new Object[] {
-				"hub"}));
-		/*
-		 * The "Stringlist" are define so.
-		 */
-		configKeys.put("GuiFlatFileNames"
+				true}));
+		configKeys.put("IsMainServer"
 				, new Language(new ISO639_2B[] {ISO639_2B.GER}, new Object[] {
-				"guiOne",
-				"guiTwo",}));
-		/*
-		 * If there was a second language, with also 2 entry, so would Entry 1 and two for the first and 3 and 4 four the second language.
-		 */	
+				false}));
+		configKeys.put("Mysql.Status"
+				, new Language(new ISO639_2B[] {ISO639_2B.GER}, new Object[] {
+				false}));
+		configKeys.put("Mysql.Host"
+				, new Language(new ISO639_2B[] {ISO639_2B.GER}, new Object[] {
+				"127.0.0.1"}));
+		configKeys.put("Mysql.Port"
+				, new Language(new ISO639_2B[] {ISO639_2B.GER}, new Object[] {
+				3306}));
+		configKeys.put("Mysql.DatabaseName"
+				, new Language(new ISO639_2B[] {ISO639_2B.GER}, new Object[] {
+				"mydatabase"}));
+		configKeys.put("Mysql.SSLEnabled"
+				, new Language(new ISO639_2B[] {ISO639_2B.GER}, new Object[] {
+				false}));
+		configKeys.put("Mysql.AutoReconnect"
+				, new Language(new ISO639_2B[] {ISO639_2B.GER}, new Object[] {
+				true}));
+		configKeys.put("Mysql.VerifyServerCertificate"
+				, new Language(new ISO639_2B[] {ISO639_2B.GER}, new Object[] {
+				false}));
+		configKeys.put("Mysql.User"
+				, new Language(new ISO639_2B[] {ISO639_2B.GER}, new Object[] {
+				"admin"}));
+		configKeys.put("Mysql.Password"
+				, new Language(new ISO639_2B[] {ISO639_2B.GER}, new Object[] {
+				"not_0123456789"}));
+		configKeys.put("DebugMode"
+				, new Language(new ISO639_2B[] {ISO639_2B.GER}, new Object[] {
+				false}));
+		configKeys.put("CryptSalt"
+				, new Language(new ISO639_2B[] {ISO639_2B.GER}, new Object[] {
+				SHA256Cryption.generateSalt()}));
+		configKeys.put("SendNewPlayerAInfo"
+				, new Language(new ISO639_2B[] {ISO639_2B.GER}, new Object[] {
+				true}));
+		configKeys.put("WebURL"
+				, new Language(new ISO639_2B[] {ISO639_2B.GER}, new Object[] {
+				"https://yourWebPortal.php"}));
+		configKeys.put("JavaTaskCheck"
+				, new Language(new ISO639_2B[] {ISO639_2B.GER}, new Object[] {
+				20}));
+		
+		configKeys.put("Identifier.Click"
+				, new Language(new ISO639_2B[] {ISO639_2B.GER}, new Object[] {
+				"click"}));
+		configKeys.put("Identifier.Hover"
+				, new Language(new ISO639_2B[] {ISO639_2B.GER}, new Object[] {
+				"hover"}));
+		configKeys.put("Seperator.BetweenFunction"
+				, new Language(new ISO639_2B[] {ISO639_2B.GER}, new Object[] {
+				"~"}));
+		configKeys.put("Seperator.WhithinFuction"
+				, new Language(new ISO639_2B[] {ISO639_2B.GER}, new Object[] {
+				"@"}));
+		configKeys.put("Seperator.Space"
+				, new Language(new ISO639_2B[] {ISO639_2B.GER}, new Object[] {
+				"+"}));
+		configKeys.put("Seperator.HoverNewLine"
+				, new Language(new ISO639_2B[] {ISO639_2B.GER}, new Object[] {
+				"~!~"}));
 	}
 	
 	@SuppressWarnings("unused") //INFO:Commands
 	public void initCommands()
 	{
 		comBypass();
-		String path = "";
-		commandsInput("path", "base", "perm.command.perm", 
-				"/base [pagenumber]", "/base ",
-				"&c/base &f| Infoseite für alle Befehle.",
-				"&c/base &f| Info page for all commands.");
-		String basePermission = "perm.base.";
+		String path = "wpc";
+		commandsInput("wpc", "wpc", "wpc.command.wpc", 
+				"/wpc [pagenumber]", "/wpc ",
+				"&c/wpc &f| Infoseite für alle Befehle.",
+				"&c/wpc &f| Info page for all commands.");
+		String basePermission = "wpc.command.htr";
 		argumentInput("base_argument", "argument", basePermission,
-				"/base argument <id>", "/econ deletelog ",
-				"&c/base argument &f| Ein Subbefehl",
-				"&c/base argument &f| A Subcommand.");
+				"/wpc howtoregister", "/wpc howtoregister ",
+				"&c/wpc howtoregister &f| Infobefehl, wie man sich für das WebPortal regestrieren kann.",
+				"&c/wpc howtoregister &f| Info command, how to register for the WebPortal.");
 	}
 	
 	private void comBypass() //INFO:ComBypass
 	{
 		String path = "Bypass.";
-		commandsKeys.put(path+"Perm1.Perm"
+		commandsKeys.put(path+"RegisterAdmin"
 				, new Language(new ISO639_2B[] {ISO639_2B.GER}, new Object[] {
-				"perm.bypass.perm"}));
+				"wpc.bypass.registeradmin"}));
 	}
 	
 	private void commandsInput(String path, String name, String basePermission, 
@@ -205,7 +256,67 @@ public class YamlManager
 				new Language(new ISO639_2B[] {ISO639_2B.GER, ISO639_2B.ENG}, new Object[] {
 						"&cDeine Eingabe ist fehlerhaft! Klicke hier auf den Text, um weitere Infos zu bekommen!",
 						"&cYour input is incorrect! Click here on the text to get more information!"}));
-		
+		languageKeys.put("NoPermission", 
+				new Language(new ISO639_2B[] {ISO639_2B.GER, ISO639_2B.ENG}, new Object[] {
+						"&cDu hast dafür keine Rechte!",
+						"&cYou dont have the rights!"}));
+		languageKeys.put("NoBoolean", 
+				new Language(new ISO639_2B[] {ISO639_2B.GER, ISO639_2B.ENG}, new Object[] {
+						"&cEin Argument ist kein Boolean(true/false)!",
+						"&cA argument is no boolean(true/false)!"}));
+		languageKeys.put("NewPlayerInfoMessage",
+				new Language(new ISO639_2B[] {ISO639_2B.GER, ISO639_2B.ENG}, new Object[] {
+						"&e.:!|=== &fWebportal Info &e===|!:.",
+						"&fOh? Du bist noch garnicht in unserem Webportal registriert.",
+						"&fMit &cdiesem+Befehl~click@RUN_COMMAND@/web+howtoregister &ferfährst du alles zur Regestrierung.",
+						"&fZum Webportal >> &6Klicke+hier~click@OPEN_URL@%url%",
+						"&e.:!|==========================|!:.",
+						
+						"&e.:!|=== &fWebportal Info &e===|!:.",
+						"&fOh? You are not registered in our web portal yet.",
+						"&cThis+command~click@RUN_COMMAND@/web+howtoregister &fwill tell you everything about the registry.",
+						"&fTo the web portal >> &6Click+here~click@OPEN_URL@%url%",
+						"&e.:!|==========================|!:."}));
+		languageKeys.put("CmdWpc.Headline", 
+				new Language(new ISO639_2B[] {ISO639_2B.GER, ISO639_2B.ENG}, new Object[] {
+						"&e=====&7[&6BungeeTeleportManager&7]&e=====",
+						"&e=====&7[&6BungeeTeleportManager&7]&e====="}));
+		languageKeys.put("CmdWpc.Next", 
+				new Language(new ISO639_2B[] {ISO639_2B.GER, ISO639_2B.ENG}, new Object[] {
+						"&e&nnächste Seite &e==>",
+						"&e&nnext page &e==>"}));
+		languageKeys.put("CmdWpc.Past", 
+				new Language(new ISO639_2B[] {ISO639_2B.GER, ISO639_2B.ENG}, new Object[] {
+						"&e<== &nvorherige Seite",
+						"&e<== &nprevious page"}));
+		languageKeys.put("CmdWpc.Past", 
+				new Language(new ISO639_2B[] {ISO639_2B.GER, ISO639_2B.ENG}, new Object[] {
+						"&e<== &nvorherige Seite",
+						"&e<== &nprevious page"}));
+		languageKeys.put("CmdWpc.HowToRegister.Array", 
+				new Language(new ISO639_2B[] {ISO639_2B.GER, ISO639_2B.ENG}, new Object[] {
+						"&e.:!|=== &fWebportal HowToRegister &e===|!:.",
+						"&fUm das Webportal benuzten zu können,",
+						"&fmusst du Ingame dem Befehl &c%cmd%~click@RUN_COMMAND@%cmd% &fausführen.",
+						"&fFalls du dein Passwort neu setzten willst oder nach langer Abwesenheit",
+						"&fdein Zugang gelöscht wurde, kannst du dich mit dem gleichen Befehl",
+						"&fneu regestrieren.",
+						"&e.:!|==========================|!:.",
+						"&e.:!|=== &fWebportal HowToRegister &e===|!:.",
+						"&fTo use the web portal,",
+						"&fyou must execute the &c%cmd%~click@RUN_COMMAND@%cmd% command in-game.",
+						"&fIf you want to reset your password",
+						"&for your account has been deleted after a long absence,",
+						"&fyou can re-register with the same command.",
+						"&e.:!|==========================|!:."}));		
+		languageKeys.put("CmdWpc.Register.Insert", 
+				new Language(new ISO639_2B[] {ISO639_2B.GER, ISO639_2B.ENG}, new Object[] {
+						"&eDu hast dich erfolgreich registriert! Mit &fdieser+URL~click@OPEN_URL@%url% &ekommst du zum WebPortal.",
+						"&eYou have successfully registered! With &fthis+URL~click@OPEN_URL@%url% &eyou will get to the WebPortal."}));
+		languageKeys.put("CmdWpc.Register.Update", 
+				new Language(new ISO639_2B[] {ISO639_2B.GER, ISO639_2B.ENG}, new Object[] {
+						"&eDu hast erfolgreich dein Passwort geändert!",
+						"&eYou have successfully changed your password!"}));
 		/*languageKeys.put(""
 				, new Language(new ISO639_2B[] {ISO639_2B.GER, ISO639_2B.ENG}, new Object[] {
 				"",
