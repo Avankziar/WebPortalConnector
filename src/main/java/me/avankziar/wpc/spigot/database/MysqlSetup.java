@@ -25,6 +25,10 @@ public class MysqlSetup
 		{
 			return false;
 		}
+		if(!setupDatabase0())
+		{
+			return false;
+		}
 		if(!setupDatabaseI())
 		{
 			return false;
@@ -72,9 +76,48 @@ public class MysqlSetup
 		return true;
 	}
 	
+	//CREATE TABLE IF NOT EXISTS `wpcParameter` (`id` int AUTO_INCREMENT PRIMARY KEY, `keywords` text, `parameters` text);
+	//INSERT INTO `wpcParameter`(`keywords`, `parameters`) VALUES ('salt','XcGAeNgL7YJqJ5r2f5ZTdX3J56Xm5dQ2+r/nlVmIvq81l49NsIeBg1kD')
+	
+	public boolean setupDatabase0() 
+	{
+		if (conn != null) 
+		{
+			PreparedStatement query = null;
+		      try 
+		      {	        
+		        String data = "CREATE TABLE IF NOT EXISTS `" + MysqlHandler.tableName0
+		        		+ "` (id int AUTO_INCREMENT PRIMARY KEY,"
+		        		+ " keywords text,"
+		        		+ " parameters text);";
+		        query = conn.prepareStatement(data);
+		        query.execute();
+		      } catch (SQLException e) 
+		      {
+		        e.printStackTrace();
+		        WebPortalConnector.log.severe("Error creating tables! Error: " + e.getMessage());
+		        return false;
+		      } finally 
+		      {
+		    	  try 
+		    	  {
+		    		  if (query != null) 
+		    		  {
+		    			  query.close();
+		    		  }
+		    	  } catch (Exception e) 
+		    	  {
+		    		  e.printStackTrace();
+		    		  return false;
+		    	  }
+		      }
+		}
+		return true;
+	}
+	
 	//CREATE TABLE IF NOT EXISTS `wpcUser` (`id` int AUTO_INCREMENT PRIMARY KEY, `player_uuid` char(36) NOT NULL UNIQUE, `player_name` varchar(16) CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci NOT NULL, `pw` text, `isadmin` boolean);
-	//INSERT INTO `wpcuser`(`player_uuid`, `player_name`, `pw`, `isadmin`) VALUES ('t8c47f99-8559-4c62-ad58-bz8951b7ab7d','Quiln','Alpha78Bravo00','true')
-	//INSERT INTO `wpcuser`(`player_uuid`, `player_name`, `pw`, `isadmin`) VALUES ('y9c47f99-1173-4c62-eq58-bz8951b7ab7d','DrOO','YourPassword','false')
+	//INSERT INTO `wpcuser`(`player_uuid`, `player_name`, `pw`, `isadmin`) VALUES ('64669849-28f6-45ef-9be3-8eafca765870','Avankziar','8aab21762248d5a216053b9959839664ffdad8186d9207dc0a4f7144e54c0d2b','true')
+	//INSERT INTO `wpcuser`(`player_uuid`, `player_name`, `pw`, `isadmin`) VALUES ('1b0d212d-859b-4e11-9cb8-e76380370129','Tragur','eaabbdc862d537c2cef1fa7124083d8a63e336170ae367db683447d990b123e1','false')
 	
 	public boolean setupDatabaseI() 
 	{
@@ -116,7 +159,6 @@ public class MysqlSetup
 	
 	//CREATE TABLE IF NOT EXISTS `wpcPlugin` (`id` int AUTO_INCREMENT PRIMARY KEY, `pluginname` text, `aliasname` text, `activ` boolean, `tablejson` longtext);
 	//INSERT INTO `wpcplugin`(`pluginname`, `aliasname`, `activ`, `tablejson`) VALUES ('AdvancedEconomyPlus', 'Geld-System', 'true', '{"TABLEWRAPPER":[{"KEYWORD":"playeraccount","TABLENAME":"secretcrafteconomyplayerdata"},{"KEYWORD":"bankaccount","TABLENAME":"secretcrafteconomybankdata"},{"KEYWORD":"actionlog","TABLENAME":"secretcrafteconomylogger"},{"KEYWORD":"trendlog","TABLENAME":"secretcrafteconomytrend"},{"KEYWORD":"standingorder","TABLENAME":"secretcrafteconomystandigorder"}]}')
-	//
 	public boolean setupDatabaseII() 
 	{
 		if (conn != null) 
@@ -128,7 +170,7 @@ public class MysqlSetup
 		        		+ "` (id int AUTO_INCREMENT PRIMARY KEY,"
 		        		+ " pluginname text,"
 		        		+ " aliasname text,"
-		        		+ " activ boolean,"
+		        		+ " active boolean,"
 		        		+ " tablejson longtext);";
 		        query = conn.prepareStatement(data);
 		        query.execute();
@@ -155,6 +197,7 @@ public class MysqlSetup
 		return true;
 	}
 	
+	//CREATE TABLE IF NOT EXISTS `wpcJavaTaskFromPHP` (`id` int AUTO_INCREMENT PRIMARY KEY, `timestamp_unix` bigint, `pluginname` text, `methodejson` longtext, `isopen` boolean, `wassuccessful` boolean, `errormessage` longtext);
 	public boolean setupDatabaseIII() 
 	{
 		if (conn != null) 

@@ -3,18 +3,20 @@ package main.java.me.avankziar.wpc.spigot.database;
 import java.util.ArrayList;
 
 import main.java.me.avankziar.wpc.spigot.WebPortalConnector;
+import main.java.me.avankziar.wpc.spigot.database.tables.Table0;
 import main.java.me.avankziar.wpc.spigot.database.tables.TableI;
 import main.java.me.avankziar.wpc.spigot.database.tables.TableII;
 import main.java.me.avankziar.wpc.spigot.database.tables.TableIII;
 
-public class MysqlHandler implements TableI, TableII, TableIII
+public class MysqlHandler implements Table0, TableI, TableII, TableIII
 {
 	public enum Type
 	{
-		PLUGINUSER, PLUGINS, JAVATASK;
+		PARAMETER, PLUGINUSER, PLUGINS, JAVATASK;
 	}
 	
 	private WebPortalConnector plugin;
+	public static String tableName0 = "wpcParameter";
 	public static String tableNameI = "wpcUser";
 	public static String tableNameII = "wpcPlugin";
 	public static String tableNameIII = "wpcJavaTaskFromPHP";
@@ -28,6 +30,8 @@ public class MysqlHandler implements TableI, TableII, TableIII
 	{
 		switch(type)
 		{
+		case PARAMETER:
+			return Table0.super.exist0(plugin, whereColumn, whereObject);
 		case PLUGINUSER:
 			return TableI.super.existI(plugin, whereColumn, whereObject);
 		case PLUGINS:
@@ -42,6 +46,8 @@ public class MysqlHandler implements TableI, TableII, TableIII
 	{
 		switch(type)
 		{
+		case PARAMETER:
+			return Table0.super.create0(plugin, object);
 		case PLUGINUSER:
 			return TableI.super.createI(plugin, object);
 		case PLUGINS:
@@ -56,6 +62,8 @@ public class MysqlHandler implements TableI, TableII, TableIII
 	{
 		switch(type)
 		{
+		case PARAMETER:
+			return Table0.super.updateData0(plugin, object, whereColumn, whereObject);
 		case PLUGINUSER:
 			return TableI.super.updateDataI(plugin, object, whereColumn, whereObject);
 		case PLUGINS:
@@ -70,6 +78,8 @@ public class MysqlHandler implements TableI, TableII, TableIII
 	{
 		switch(type)
 		{
+		case PARAMETER:
+			return Table0.super.getData0(plugin, whereColumn, whereObject);
 		case PLUGINUSER:
 			return TableI.super.getDataI(plugin, whereColumn, whereObject);
 		case PLUGINS:
@@ -84,6 +94,8 @@ public class MysqlHandler implements TableI, TableII, TableIII
 	{
 		switch(type)
 		{
+		case PARAMETER:
+			return Table0.super.deleteData0(plugin, whereColumn, whereObject);
 		case PLUGINUSER:
 			return TableI.super.deleteDataI(plugin, whereColumn, whereObject);
 		case PLUGINS:
@@ -98,6 +110,8 @@ public class MysqlHandler implements TableI, TableII, TableIII
 	{
 		switch(type)
 		{
+		case PARAMETER:
+			return Table0.super.lastID0(plugin);
 		case PLUGINUSER:
 			return TableI.super.lastIDI(plugin);
 		case PLUGINS:
@@ -112,6 +126,8 @@ public class MysqlHandler implements TableI, TableII, TableIII
 	{
 		switch(type)
 		{
+		case PARAMETER:
+			return Table0.super.countWhereID0(plugin, whereColumn, whereObject);
 		case PLUGINUSER:
 			return TableI.super.countWhereIDI(plugin, whereColumn, whereObject);
 		case PLUGINS:
@@ -127,6 +143,8 @@ public class MysqlHandler implements TableI, TableII, TableIII
 	{
 		switch(type)
 		{
+		case PARAMETER:
+			return Table0.super.getList0(plugin, orderByColumn, start, quantity, whereColumn, whereObject);
 		case PLUGINUSER:
 			return TableI.super.getListI(plugin, orderByColumn, start, quantity, whereColumn, whereObject);
 		case PLUGINS:
@@ -141,6 +159,8 @@ public class MysqlHandler implements TableI, TableII, TableIII
 	{
 		switch(type)
 		{
+		case PARAMETER:
+			return Table0.super.getTop0(plugin, orderByColumn, start, end);
 		case PLUGINUSER:
 			return TableI.super.getTopI(plugin, orderByColumn, start, end);
 		case PLUGINS:
@@ -156,6 +176,8 @@ public class MysqlHandler implements TableI, TableII, TableIII
 	{
 		switch(type)
 		{
+		case PARAMETER:
+			return Table0.super.getAllListAt0(plugin, orderByColumn, whereColumn, whereObject);
 		case PLUGINUSER:
 			return TableI.super.getAllListAtI(plugin, orderByColumn, whereColumn, whereObject);
 		case PLUGINS:

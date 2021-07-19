@@ -48,7 +48,7 @@ public class SHA256Cryption
     public static void main(String[] args) throws NoSuchAlgorithmException 
     {
     	String salt = "XcGAeNgL7YJqJ5r2f5ZTdX3J56Xm5dQ2+r/nlVmIvq81l49NsIeBg1kD";
-    	String pw = "Alpha78Bravo00";
+    	String pw = "987654321";
     	String hash = encryptSHA256(pw+salt);
         System.out.println("Java SHA256 = " + hash);
     }

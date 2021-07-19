@@ -6,6 +6,6 @@ Build 1 ========================================================================
 - /wpc setplugin <Pluginname> <Aktiv(Boolean)> | Fügt ein Plugin der Mysql hinzu, damit es vom WebPortal erkannt und benutzt wird. Der Boolean
                                                  gibt an, ob das plugin
 - +Mysql zur User Regestrierung. Mit istAdmin Boolean
-- +Mysql zur Übermittlung aller Tabellennamen unterstützter Plugins
+- +Mysql zur Übermittlung aller Tabellennamen unt erstützter Plugins
 - +Mysql zur Aufgabenabarbeitung von PHP
 ==============================================================================================================================

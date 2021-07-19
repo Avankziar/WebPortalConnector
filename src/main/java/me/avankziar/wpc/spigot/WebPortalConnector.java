@@ -30,10 +30,12 @@ import main.java.me.avankziar.wpc.spigot.database.MysqlHandler;
 import main.java.me.avankziar.wpc.spigot.database.MysqlSetup;
 import main.java.me.avankziar.wpc.spigot.database.YamlHandler;
 import main.java.me.avankziar.wpc.spigot.database.YamlManager;
+import main.java.me.avankziar.wpc.spigot.database.MysqlHandler.Type;
 import main.java.me.avankziar.wpc.spigot.listener.AddPluginSupportListener;
 import main.java.me.avankziar.wpc.spigot.listener.JavaPHPTaskEndListener;
 import main.java.me.avankziar.wpc.spigot.listener.JoinListener;
 import main.java.me.avankziar.wpc.spigot.metrics.Metrics;
+import main.java.me.avankziar.wpc.spigot.objects.Parameter;
 import main.java.me.avankziar.wpc.spigot.objects.PluginSettings;
 import main.java.me.avankziar.wpc.spigot.permission.BypassPermission;
 import main.java.me.avankziar.wpc.spigot.permission.KeyHandler;
@@ -94,6 +96,7 @@ public class WebPortalConnector extends JavaPlugin
 		setupCommandTree();
 		setupListeners();
 		setupBstats();
+		initParameters();
 	}
 	
 	public void onDisable()
@@ -350,5 +353,17 @@ public class WebPortalConnector extends JavaPlugin
 	{
 		int pluginId = 10344;
         new Metrics(this, pluginId);
+	}
+	
+	public void initParameters()
+	{
+		Parameter salt = new Parameter("salt", PluginSettings.settings.getCryptSalt());
+		if(plugin.getMysqlHandler().exist(Type.PARAMETER, "`parameters` = ?", salt.getKeyword()))
+		{
+			plugin.getMysqlHandler().updateData(Type.PARAMETER, salt, "`parameters` = ?", salt.getKeyword());
+		} else
+		{
+			plugin.getMysqlHandler().create(Type.PARAMETER, salt);
+		}
 	}
 }
