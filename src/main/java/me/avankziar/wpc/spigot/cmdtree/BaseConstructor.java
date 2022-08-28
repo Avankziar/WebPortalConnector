@@ -1,5 +1,7 @@
 package main.java.me.avankziar.wpc.spigot.cmdtree;
 
+import main.java.me.avankziar.wpc.spigot.WebPortalConnector;
+
 public class BaseConstructor
 {
 	private String name;
@@ -10,7 +12,7 @@ public class BaseConstructor
 	private String helpInfo;
 	private boolean canConsoleAccess;
 	
-	public BaseConstructor(String name, String path, String permission, String suggestion, String commandString,
+	public BaseConstructor(CommandExecuteType cet, String name, String path, String permission, String suggestion, String commandString,
 			String helpInfo, boolean canConsoleAccess)
 	{
 		setName(name);
@@ -20,6 +22,13 @@ public class BaseConstructor
 		setCommandString(commandString);
 		setHelpInfo(helpInfo);
 		setCanConsoleAccess(canConsoleAccess);
+		CommandSuggest.set(cet, commandString);
+		getPlugin().addingCommandHelps(this);
+	}
+	
+	public static WebPortalConnector getPlugin()
+	{
+		return WebPortalConnector.getPlugin();
 	}
 
 	public String getName()

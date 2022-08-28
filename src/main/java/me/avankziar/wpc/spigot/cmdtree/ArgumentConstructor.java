@@ -3,7 +3,7 @@ package main.java.me.avankziar.wpc.spigot.cmdtree;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 
-import main.java.me.avankziar.wpc.spigot.WebPortalConnector;
+import org.bukkit.configuration.file.YamlConfiguration;
 
 public class ArgumentConstructor extends BaseConstructor
 {
@@ -15,16 +15,63 @@ public class ArgumentConstructor extends BaseConstructor
     public LinkedHashMap<Integer, ArrayList<String>> tabList;
 
     public ArgumentConstructor(
+    		CommandExecuteType cet,
     		String path, int position, int minArgs, int maxArgs, boolean canConsoleAccess,
     		LinkedHashMap<Integer, ArrayList<String>> tablistAddingOtherValue,
     		ArgumentConstructor...argumentConstructors)
     {
-    	super(WebPortalConnector.getPlugin().getYamlHandler().getCommands().getString(path+".Argument"),
+    	super(
+    			cet,
+    			getPlugin().getYamlHandler().getCommands().getString(path+".Argument"),
     			path,
-    			WebPortalConnector.getPlugin().getYamlHandler().getCommands().getString(path+".Permission"),
-    			WebPortalConnector.getPlugin().getYamlHandler().getCommands().getString(path+".Suggestion"),
-    			WebPortalConnector.getPlugin().getYamlHandler().getCommands().getString(path+".CommandString"),
-    			WebPortalConnector.getPlugin().getYamlHandler().getCommands().getString(path+".HelpInfo"),
+    			getPlugin().getYamlHandler().getCommands().getString(path+".Permission"),
+    			getPlugin().getYamlHandler().getCommands().getString(path+".Suggestion"),
+    			getPlugin().getYamlHandler().getCommands().getString(path+".CommandString"),
+    			getPlugin().getYamlHandler().getCommands().getString(path+".HelpInfo"),
+    			canConsoleAccess);
+        this.minArgsConstructor = minArgs;
+        this.maxArgsConstructor = maxArgs;
+        this.minArgsTablist = minArgs;
+        this.maxArgsTablist = maxArgs;
+        this.subargument = new ArrayList<>();
+        this.tabList = new LinkedHashMap<>();
+        if(tablistAddingOtherValue != null)
+        {
+        	this.tabList = tablistAddingOtherValue;
+        }
+        ArrayList<String> tl = tabList.get(position);
+        if(tl == null)
+        {
+        	tl = new ArrayList<>();
+        }
+        for(ArgumentConstructor ac : argumentConstructors)
+        {
+        	subargument.add(ac);
+        	tl.add(ac.getName());
+        }
+        if(tabList.containsKey(position))
+        {
+        	tabList.replace(position, tl);
+        } else
+        {
+        	tabList.put(position, tl);
+        }
+    }
+    
+    public ArgumentConstructor(
+    		CommandExecuteType cet, YamlConfiguration y,
+    		String path, int position, int minArgs, int maxArgs, boolean canConsoleAccess,
+    		LinkedHashMap<Integer, ArrayList<String>> tablistAddingOtherValue,
+    		ArgumentConstructor...argumentConstructors)
+    {
+    	super(
+    			cet,
+    			y.getString(path+".Argument"),
+    			path,
+    			y.getString(path+".Permission"),
+    			y.getString(path+".Suggestion"),
+    			y.getString(path+".CommandString"),
+    			y.getString(path+".HelpInfo"),
     			canConsoleAccess);
         this.minArgsConstructor = minArgs;
         this.maxArgsConstructor = maxArgs;

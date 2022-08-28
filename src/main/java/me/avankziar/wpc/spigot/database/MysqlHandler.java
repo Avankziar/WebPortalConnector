@@ -1,190 +1,326 @@
 package main.java.me.avankziar.wpc.spigot.database;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.logging.Level;
 
 import main.java.me.avankziar.wpc.spigot.WebPortalConnector;
-import main.java.me.avankziar.wpc.spigot.database.tables.Table0;
-import main.java.me.avankziar.wpc.spigot.database.tables.TableI;
-import main.java.me.avankziar.wpc.spigot.database.tables.TableII;
-import main.java.me.avankziar.wpc.spigot.database.tables.TableIII;
+import main.java.me.avankziar.wpc.spigot.objects.JavaTask;
+import main.java.me.avankziar.wpc.spigot.objects.Parameter;
+import main.java.me.avankziar.wpc.spigot.objects.PluginObject;
+import main.java.me.avankziar.wpc.spigot.objects.WebPortalUser;
 
-public class MysqlHandler implements Table0, TableI, TableII, TableIII
+public class MysqlHandler
 {
 	public enum Type
 	{
-		PARAMETER, PLUGINUSER, PLUGINS, JAVATASK;
+		PARAMETER("wpcParameter", new Parameter()),
+		PLUGINUSER("wpcUser", new WebPortalUser()),
+		PLUGINS("wpcPlugin", new PluginObject()),
+		JAVATASK("wpcJavaTaskFromPHP", new JavaTask())
+		;
+		
+		private Type(String value, Object object)
+		{
+			this.value = value;
+			this.object = object;
+		}
+		
+		private final String value;
+		private final Object object;
+
+		public String getValue()
+		{
+			return value;
+		}
+		
+		public Object getObject()
+		{
+			return object;
+		}
+	}
+	
+	public enum QueryType
+	{
+		INSERT, UPDATE, DELETE, READ;
+	}
+	
+	/*
+	 * Alle Mysql Reihen, welche durch den Betrieb aufkommen.
+	 */
+	public static long startRecordTime = System.currentTimeMillis();
+	public static int inserts = 0;
+	public static int updates = 0;
+	public static int deletes = 0;
+	public static int reads = 0;
+	
+	public static void addRows(QueryType type, int amount)
+	{
+		switch(type)
+		{
+		case DELETE:
+			deletes += amount;
+			break;
+		case INSERT:
+			inserts += amount;
+		case READ:
+			reads += amount;
+			break;
+		case UPDATE:
+			updates += amount;
+			break;
+		}
+	}
+	
+	public static void resetsRows()
+	{
+		inserts = 0;
+		updates = 0;
+		reads = 0;
+		deletes = 0;
 	}
 	
 	private WebPortalConnector plugin;
-	public static String tableName0 = "wpcParameter";
-	public static String tableNameI = "wpcUser";
-	public static String tableNameII = "wpcPlugin";
-	public static String tableNameIII = "wpcJavaTaskFromPHP";
 	
 	public MysqlHandler(WebPortalConnector plugin) 
 	{
 		this.plugin = plugin;
 	}
 	
+	private PreparedStatement getPreparedStatement(Connection conn, String sql, int count, Object... whereObject) throws SQLException
+	{
+		PreparedStatement ps = conn.prepareStatement(sql);
+		int i = count;
+        for(Object o : whereObject)
+        {
+        	ps.setObject(i, o);
+        	i++;
+        }
+        return ps;
+	}
+	
 	public boolean exist(Type type, String whereColumn, Object... whereObject)
 	{
-		switch(type)
+		//All Object which leaves the try-block, will be closed. So conn and ps is closed after the methode
+		//No finally needed.
+		//So much as possible in async methode use
+		try (Connection conn = plugin.getMysqlSetup().getConnection();)
 		{
-		case PARAMETER:
-			return Table0.super.exist0(plugin, whereColumn, whereObject);
-		case PLUGINUSER:
-			return TableI.super.existI(plugin, whereColumn, whereObject);
-		case PLUGINS:
-			return TableII.super.existII(plugin, whereColumn, whereObject);
-		case JAVATASK:
-			return TableIII.super.existIII(plugin, whereColumn, whereObject);
+			PreparedStatement ps = getPreparedStatement(conn,
+					"SELECT `id` FROM `" + type.getValue()+ "` WHERE "+whereColumn+" LIMIT 1",
+					1,
+					whereObject);
+	        ResultSet rs = ps.executeQuery();
+	        MysqlHandler.addRows(QueryType.READ, rs.getMetaData().getColumnCount());
+	        while (rs.next()) 
+	        {
+	        	return true;
+	        }
+	    } catch (SQLException e) 
+		{
+			  if(type.getObject() instanceof MysqlHandable)
+			  {
+				  MysqlHandable mh = (MysqlHandable) type.getObject();
+				  mh.log(Level.WARNING, "Could not check "+type.getObject().getClass().getName()+" Object if it exist!", e);
+			  }
 		}
 		return false;
 	}
 	
 	public boolean create(Type type, Object object)
 	{
-		switch(type)
+		if(object instanceof MysqlHandable)
 		{
-		case PARAMETER:
-			return Table0.super.create0(plugin, object);
-		case PLUGINUSER:
-			return TableI.super.createI(plugin, object);
-		case PLUGINS:
-			return TableII.super.createII(plugin, object);
-		case JAVATASK:
-			return TableIII.super.createIII(plugin, object);
+			MysqlHandable mh = (MysqlHandable) object;
+			try (Connection conn = plugin.getMysqlSetup().getConnection();)
+			{
+				mh.create(conn, type.getValue());
+				return true;
+			} catch (Exception e)
+			{
+				mh.log(Level.WARNING, "Could not create "+object.getClass().getName()+" Object!", e);
+			}
 		}
 		return false;
 	}
 	
 	public boolean updateData(Type type, Object object, String whereColumn, Object... whereObject)
 	{
-		switch(type)
+		if(object instanceof MysqlHandable)
 		{
-		case PARAMETER:
-			return Table0.super.updateData0(plugin, object, whereColumn, whereObject);
-		case PLUGINUSER:
-			return TableI.super.updateDataI(plugin, object, whereColumn, whereObject);
-		case PLUGINS:
-			return TableII.super.updateDataII(plugin, object, whereColumn, whereObject);
-		case JAVATASK:
-			return TableIII.super.updateDataIII(plugin, object, whereColumn, whereObject);
+			MysqlHandable mh = (MysqlHandable) object;
+			try (Connection conn = plugin.getMysqlSetup().getConnection();)
+			{
+				mh.update(conn, type.getValue(), whereColumn, whereObject);
+				return true;
+			} catch (Exception e)
+			{
+				mh.log(Level.WARNING, "Could not create "+object.getClass().getName()+" Object!", e);
+			}
 		}
 		return false;
 	}
 	
 	public Object getData(Type type, String whereColumn, Object... whereObject)
 	{
-		switch(type)
+		Object object = type.getObject();
+		if(object instanceof MysqlHandable)
 		{
-		case PARAMETER:
-			return Table0.super.getData0(plugin, whereColumn, whereObject);
-		case PLUGINUSER:
-			return TableI.super.getDataI(plugin, whereColumn, whereObject);
-		case PLUGINS:
-			return TableII.super.getDataII(plugin, whereColumn, whereObject);
-		case JAVATASK:
-			return TableIII.super.getDataIII(plugin, whereColumn, whereObject);
+			MysqlHandable mh = (MysqlHandable) object;
+			try (Connection conn = plugin.getMysqlSetup().getConnection();)
+			{
+				ArrayList<Object> list = mh.get(conn, type.getValue(), "`id` ASC", " Limit 1", whereColumn, whereObject);
+				if(!list.isEmpty())
+				{
+					return list.get(0);
+				}
+			} catch (Exception e)
+			{
+				mh.log(Level.WARNING, "Could not create "+object.getClass().getName()+" Object!", e);
+			}
 		}
 		return null;
 	}
 	
-	public boolean deleteData(Type type, String whereColumn, Object... whereObject)
+	public int deleteData(Type type, String whereColumn, Object... whereObject)
 	{
-		switch(type)
+		try (Connection conn = plugin.getMysqlSetup().getConnection();)
 		{
-		case PARAMETER:
-			return Table0.super.deleteData0(plugin, whereColumn, whereObject);
-		case PLUGINUSER:
-			return TableI.super.deleteDataI(plugin, whereColumn, whereObject);
-		case PLUGINS:
-			return TableII.super.deleteDataII(plugin, whereColumn, whereObject);
-		case JAVATASK:
-			return TableIII.super.deleteDataIII(plugin, whereColumn, whereObject);
+			PreparedStatement ps = getPreparedStatement(conn,
+					"DELETE FROM `" + type.getValue() + "` WHERE "+whereColumn,
+					1,
+					whereObject);
+	        int d = ps.executeUpdate();
+			MysqlHandler.addRows(QueryType.DELETE, d);
+			return d;
+	    } catch (SQLException e) 
+		{
+	    	if(type.getObject() instanceof MysqlHandable)
+			  {
+				  MysqlHandable mh = (MysqlHandable) type.getObject();
+				  mh.log(Level.WARNING, "Could not delete "+type.getObject().getClass().getName()+" Object!", e);
+			  }
 		}
-		return false;
+		return 0;
 	}
 	
 	public int lastID(Type type)
 	{
-		switch(type)
+		try (Connection conn = plugin.getMysqlSetup().getConnection();)
 		{
-		case PARAMETER:
-			return Table0.super.lastID0(plugin);
-		case PLUGINUSER:
-			return TableI.super.lastIDI(plugin);
-		case PLUGINS:
-			return TableII.super.lastIDII(plugin);
-		case JAVATASK:
-			return TableIII.super.lastIDIII(plugin);
+			PreparedStatement ps = getPreparedStatement(conn,
+					"SELECT `id` FROM `" + type.getValue() + "` ORDER BY `id` DESC LIMIT 1",
+					1);
+	        ResultSet rs = ps.executeQuery();
+	        MysqlHandler.addRows(QueryType.READ, rs.getMetaData().getColumnCount());
+	        while (rs.next()) 
+	        {
+	        	return rs.getInt("id");
+	        }
+	    } catch (SQLException e) 
+		{
+			  if(type.getObject() instanceof MysqlHandable)
+			  {
+				  MysqlHandable mh = (MysqlHandable) type.getObject();
+				  mh.log(Level.WARNING, "Could not get last id from "+type.getObject().getClass().getName()+" Object table!", e);
+			  }
 		}
 		return 0;
 	}
 	
-	public int countWhereID(Type type, String whereColumn, Object... whereObject)
+	public int getCount(Type type, String whereColumn, Object... whereObject)
 	{
-		switch(type)
+		try (Connection conn = plugin.getMysqlSetup().getConnection();)
 		{
-		case PARAMETER:
-			return Table0.super.countWhereID0(plugin, whereColumn, whereObject);
-		case PLUGINUSER:
-			return TableI.super.countWhereIDI(plugin, whereColumn, whereObject);
-		case PLUGINS:
-			return TableII.super.countWhereIDII(plugin, whereColumn, whereObject);
-		case JAVATASK:
-			return TableIII.super.countWhereIDIII(plugin, whereColumn, whereObject);
+			PreparedStatement ps = getPreparedStatement(conn,
+					" SELECT count(*) FROM `" + type.getValue() + "` WHERE "+whereColumn,
+					1,
+					whereObject);
+	        ResultSet rs = ps.executeQuery();
+	        MysqlHandler.addRows(QueryType.READ, rs.getMetaData().getColumnCount());
+	        while (rs.next()) 
+	        {
+	        	return rs.getInt(1);
+	        }
+	    } catch (SQLException e) 
+		{
+			  if(type.getObject() instanceof MysqlHandable)
+			  {
+				  MysqlHandable mh = (MysqlHandable) type.getObject();
+				  mh.log(Level.WARNING, "Could not count "+type.getObject().getClass().getName()+" Object!", e);
+			  }
 		}
 		return 0;
 	}
 	
-	public ArrayList<?> getList(Type type, String orderByColumn,
-			boolean desc, int start, int quantity, String whereColumn, Object...whereObject)
+	public double getSum(Type type, String whereColumn, Object... whereObject)
 	{
-		switch(type)
+		try (Connection conn = plugin.getMysqlSetup().getConnection();)
 		{
-		case PARAMETER:
-			return Table0.super.getList0(plugin, orderByColumn, start, quantity, whereColumn, whereObject);
-		case PLUGINUSER:
-			return TableI.super.getListI(plugin, orderByColumn, start, quantity, whereColumn, whereObject);
-		case PLUGINS:
-			return TableII.super.getListII(plugin, orderByColumn, start, quantity, whereColumn, whereObject);
-		case JAVATASK:
-			return TableIII.super.getListIII(plugin, orderByColumn, start, quantity, whereColumn, whereObject);
+			PreparedStatement ps = getPreparedStatement(conn,
+					"SELECT sum("+whereColumn+") FROM `" + type.getValue() + "` WHERE 1",
+					1,
+					whereObject);
+	        ResultSet rs = ps.executeQuery();
+	        MysqlHandler.addRows(QueryType.READ, rs.getMetaData().getColumnCount());
+	        while (rs.next()) 
+	        {
+	        	return rs.getInt(1);
+	        }
+	    } catch (SQLException e) 
+		{
+			  if(type.getObject() instanceof MysqlHandable)
+			  {
+				  MysqlHandable mh = (MysqlHandable) type.getObject();
+				  mh.log(Level.WARNING, "Could not summarized "+type.getObject().getClass().getName()+" Object!", e);
+			  }
 		}
-		return null;
+		return 0;
 	}
 	
-	public ArrayList<?> getTop(Type type, String orderByColumn, boolean desc, int start, int end)
+	public ArrayList<Object> getList(Type type, String orderByColumn, int start, int quantity, String whereColumn, Object...whereObject)
 	{
-		switch(type)
+		Object object = type.getObject();
+		if(object instanceof MysqlHandable)
 		{
-		case PARAMETER:
-			return Table0.super.getTop0(plugin, orderByColumn, start, end);
-		case PLUGINUSER:
-			return TableI.super.getTopI(plugin, orderByColumn, start, end);
-		case PLUGINS:
-			return TableII.super.getTopII(plugin, orderByColumn, start, end);
-		case JAVATASK:
-			return TableIII.super.getTopIII(plugin, orderByColumn, start, end);
+			MysqlHandable mh = (MysqlHandable) object;
+			try (Connection conn = plugin.getMysqlSetup().getConnection();)
+			{
+				ArrayList<Object> list = mh.get(conn, type.getValue(), orderByColumn, " Limit "+start+", "+quantity, whereColumn, whereObject);
+				if(!list.isEmpty())
+				{
+					return list;
+				}
+			} catch (Exception e)
+			{
+				mh.log(Level.WARNING, "Could not create "+object.getClass().getName()+" Object!", e);
+			}
 		}
-		return null;
+		return new ArrayList<>();
 	}
 	
-	public ArrayList<?> getAllListAt(Type type, String orderByColumn,
-			boolean desc, String whereColumn, Object...whereObject)
+	public ArrayList<Object> getFullList(Type type, String orderByColumn,
+			String whereColumn, Object...whereObject)
 	{
-		switch(type)
+		Object object = type.getObject();
+		if(object instanceof MysqlHandable)
 		{
-		case PARAMETER:
-			return Table0.super.getAllListAt0(plugin, orderByColumn, whereColumn, whereObject);
-		case PLUGINUSER:
-			return TableI.super.getAllListAtI(plugin, orderByColumn, whereColumn, whereObject);
-		case PLUGINS:
-			return TableII.super.getAllListAtII(plugin, orderByColumn, whereColumn, whereObject);
-		case JAVATASK:
-			return TableIII.super.getAllListAtIII(plugin, orderByColumn, whereColumn, whereObject);
+			MysqlHandable mh = (MysqlHandable) object;
+			try (Connection conn = plugin.getMysqlSetup().getConnection();)
+			{
+				ArrayList<Object> list = mh.get(conn, type.getValue(), orderByColumn, "", whereColumn, whereObject);
+				if(!list.isEmpty())
+				{
+					return list;
+				}
+			} catch (Exception e)
+			{
+				mh.log(Level.WARNING, "Could not create "+object.getClass().getName()+" Object!", e);
+			}
 		}
-		return null;
+		return new ArrayList<>();
 	}
 }

@@ -8,8 +8,8 @@ import main.java.me.avankziar.wpc.general.ChatApi;
 import main.java.me.avankziar.wpc.spigot.WebPortalConnector;
 import main.java.me.avankziar.wpc.spigot.cmdtree.ArgumentConstructor;
 import main.java.me.avankziar.wpc.spigot.cmdtree.ArgumentModule;
-import main.java.me.avankziar.wpc.spigot.objects.PluginSettings;
-import main.java.me.avankziar.wpc.spigot.permission.KeyHandler;
+import main.java.me.avankziar.wpc.spigot.cmdtree.CommandExecuteType;
+import main.java.me.avankziar.wpc.spigot.cmdtree.CommandSuggest;
 
 public class ARGHowToRegister extends ArgumentModule
 {
@@ -28,7 +28,7 @@ public class ARGHowToRegister extends ArgumentModule
 		for(String s : msgs)
 		{
 			sender.spigot().sendMessage(ChatApi.generateTextComponent(
-					s.replace("%cmd%", PluginSettings.settings.getCommands(KeyHandler.WPC_REGISTER).replace(" ", "+"))));
+					s.replace("%cmd%", CommandSuggest.get(CommandExecuteType.WPC_REGISTER).replace(" ", "+"))));
 		}
 	}
 }

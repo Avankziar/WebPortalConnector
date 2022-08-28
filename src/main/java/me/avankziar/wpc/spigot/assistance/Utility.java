@@ -8,7 +8,7 @@ import java.time.LocalDateTime;
 
 import main.java.me.avankziar.wpc.spigot.WebPortalConnector;
 import main.java.me.avankziar.wpc.spigot.database.MysqlHandler;
-import main.java.me.avankziar.wpc.spigot.objects.PluginUser;
+import main.java.me.avankziar.wpc.spigot.objects.WebPortalUser;
 
 public class Utility
 {
@@ -38,7 +38,7 @@ public class Utility
 		String name = null;
 		if(plugin.getMysqlHandler().exist(MysqlHandler.Type.PLUGINUSER, "player_uuid = ?", uuid))
 		{
-			name = ((PluginUser) plugin.getMysqlHandler().getData(MysqlHandler.Type.PLUGINUSER,
+			name = ((WebPortalUser) plugin.getMysqlHandler().getData(MysqlHandler.Type.PLUGINUSER,
 					"player_uuid = ?", uuid)).getName();
 			return name;
 		}
@@ -50,7 +50,7 @@ public class Utility
 		String uuid = "";
 		if(plugin.getMysqlHandler().exist(MysqlHandler.Type.PLUGINUSER, "`player_name` = ?", playername))
 		{
-			uuid = ((PluginUser) plugin.getMysqlHandler().getData(MysqlHandler.Type.PLUGINUSER, "`player_name` = ?", playername)).getUUID();
+			uuid = ((WebPortalUser) plugin.getMysqlHandler().getData(MysqlHandler.Type.PLUGINUSER, "`player_name` = ?", playername)).getUUID();
 			return uuid;
 		}
 		return null;

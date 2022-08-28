@@ -2,6 +2,7 @@ package main.java.me.avankziar.wpc.spigot.database;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 
@@ -9,6 +10,7 @@ import org.bukkit.configuration.file.YamlConfiguration;
 
 import main.java.me.avankziar.wpc.spigot.assistance.SHA256Cryption;
 import main.java.me.avankziar.wpc.spigot.database.Language.ISO639_2B;
+import main.java.me.avankziar.wpc.spigot.permission.Bypass;
 
 public class YamlManager
 {
@@ -200,10 +202,13 @@ public class YamlManager
 	
 	private void comBypass() //INFO:ComBypass
 	{
-		String path = "Bypass.";
-		commandsKeys.put(path+"RegisterAdmin"
-				, new Language(new ISO639_2B[] {ISO639_2B.GER}, new Object[] {
-				"wpc.bypass.registeradmin"}));
+		List<Bypass.Permission> list = new ArrayList<Bypass.Permission>(EnumSet.allOf(Bypass.Permission.class));
+		for(Bypass.Permission ept : list)
+		{
+			commandsKeys.put("Bypass."+ept.toString().replace("_", ".")
+					, new Language(new ISO639_2B[] {ISO639_2B.GER}, new Object[] {
+					"mim."+ept.toString().toLowerCase().replace("_", ".")}));
+		}
 	}
 	
 	private void commandsInput(String path, String name, String basePermission, 

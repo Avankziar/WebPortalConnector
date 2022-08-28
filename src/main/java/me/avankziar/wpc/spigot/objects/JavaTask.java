@@ -1,11 +1,20 @@
 package main.java.me.avankziar.wpc.spigot.objects;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.Map.Entry;
+import java.util.logging.Level;
 
 import com.google.gson.Gson;
 
-public class JavaTask
+import main.java.me.avankziar.wpc.spigot.database.MysqlHandable;
+import main.java.me.avankziar.wpc.spigot.database.MysqlHandler;
+
+public class JavaTask implements MysqlHandable
 {
 	private int id;
 	private long timeStamp;
@@ -14,6 +23,8 @@ public class JavaTask
 	private boolean isOpen;
 	private boolean wasSuccessful;
 	private String errorMessage;
+	
+	public JavaTask() {}
 	
 	public JavaTask(int id, long timeStamp, String pluginName, LinkedHashMap<String, Object> taskJson,
 			boolean isOpen, boolean wasSuccessful, String errorMessage)
@@ -126,6 +137,109 @@ public class JavaTask
 	public void setPluginName(String pluginName)
 	{
 		this.pluginName = pluginName;
+	}@Override
+	public boolean create(Connection conn, String tablename)
+	{
+		try
+		{
+			String sql = "INSERT INTO `" + tablename
+					+ "`(`timestamp_unix`, `pluginname`, `methodejson`, `isopen`, `wassuccessful`, `errormessage`) " 
+					+ "VALUES(?, ?, ?, ?, ?, ?)";
+			PreparedStatement ps = conn.prepareStatement(sql);
+			ps.setLong(1, getTimeStamp());
+		    ps.setString(2, getPluginName());
+		    ps.setString(3, JavaTask.convertToJson(getTaskJson()));
+		    ps.setBoolean(4, isOpen());
+		    ps.setBoolean(5, isWasSuccessful());
+		    ps.setString(6, getErrormessage());
+	        int i = ps.executeUpdate();
+	        MysqlHandler.addRows(MysqlHandler.QueryType.INSERT, i);
+	        return true;
+		} catch (SQLException e)
+		{
+			this.log(Level.WARNING, "SQLException! Could not create a "+this.getClass().getSimpleName()+" Object!", e);
+		}
+		return false;
 	}
 
+	@Override
+	public boolean update(Connection conn, String tablename, String whereColumn, Object... whereObject)
+	{
+		try
+		{
+			String sql = "UPDATE `" + tablename
+					+ "` SET `timestamp_unix` = ?, `pluginname` = ?, `methodejson` = ?,"
+					+ " `isopen` = ?, `wassuccessful` = ?, `errormessage` = ?" 
+					+ " WHERE "+whereColumn;
+			PreparedStatement ps = conn.prepareStatement(sql);
+			ps.setLong(1, getTimeStamp());
+		    ps.setString(2, getPluginName());
+		    ps.setString(3, JavaTask.convertToJson(getTaskJson()));
+		    ps.setBoolean(4, isOpen());
+		    ps.setBoolean(5, isWasSuccessful());
+		    ps.setString(6, getErrormessage());
+			int i = 7;
+			for(Object o : whereObject)
+			{
+				ps.setObject(i, o);
+				i++;
+			}			
+			int u = ps.executeUpdate();
+			MysqlHandler.addRows(MysqlHandler.QueryType.UPDATE, u);
+			return true;
+		} catch (SQLException e)
+		{
+			this.log(Level.WARNING, "SQLException! Could not update a "+this.getClass().getSimpleName()+" Object!", e);
+		}
+		return false;
+	}
+
+	@Override
+	public ArrayList<Object> get(Connection conn, String tablename, String orderby, String limit, String whereColumn, Object... whereObject)
+	{
+		try
+		{
+			String sql = "SELECT * FROM `" + tablename
+				+ "` WHERE "+whereColumn+" ORDER BY "+orderby+limit;
+			PreparedStatement ps = conn.prepareStatement(sql);
+			int i = 1;
+			for(Object o : whereObject)
+			{
+				ps.setObject(i, o);
+				i++;
+			}
+			
+			ResultSet rs = ps.executeQuery();
+			MysqlHandler.addRows(MysqlHandler.QueryType.READ, rs.getMetaData().getColumnCount());
+			ArrayList<Object> al = new ArrayList<>();
+			while (rs.next()) 
+			{
+				al.add(new JavaTask(rs.getInt("id"),
+	        			rs.getLong("timestamp_unix"),
+	        			rs.getString("pluginname"),
+	        			JavaTask.convertToMap(rs.getString("methodejson")),
+	        			rs.getBoolean("isopen"),
+	        			rs.getBoolean("wassuccessful"),
+	        			rs.getString("errormessage")));
+			}
+			return al;
+		} catch (SQLException e)
+		{
+			this.log(Level.WARNING, "SQLException! Could not get a "+this.getClass().getSimpleName()+" Object!", e);
+		}
+		return new ArrayList<>();
+	}
+	
+	public static ArrayList<JavaTask> convert(ArrayList<Object> arrayList)
+	{
+		ArrayList<JavaTask> l = new ArrayList<>();
+		for(Object o : arrayList)
+		{
+			if(o instanceof JavaTask)
+			{
+				l.add((JavaTask) o);
+			}
+		}
+		return l;
+	}
 }

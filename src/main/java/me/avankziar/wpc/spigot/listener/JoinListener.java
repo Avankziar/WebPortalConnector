@@ -13,8 +13,8 @@ import main.java.me.avankziar.wpc.general.ChatApi;
 import main.java.me.avankziar.wpc.general.ConvertHandler;
 import main.java.me.avankziar.wpc.spigot.WebPortalConnector;
 import main.java.me.avankziar.wpc.spigot.database.MysqlHandler.Type;
-import main.java.me.avankziar.wpc.spigot.objects.PluginSettings;
-import main.java.me.avankziar.wpc.spigot.objects.PluginUser;
+import main.java.me.avankziar.wpc.spigot.handler.ConfigHandler;
+import main.java.me.avankziar.wpc.spigot.objects.WebPortalUser;
 
 public class JoinListener implements Listener
 {
@@ -41,17 +41,17 @@ public class JoinListener implements Listener
 					cancel();
 					return;
 				}
-				int count = plugin.getMysqlHandler().countWhereID(Type.PLUGINUSER, "`player_name` = ?", playername);
-				PluginUser user = (PluginUser) plugin.getMysqlHandler().getData(Type.PLUGINUSER,
+				int count = plugin.getMysqlHandler().getCount(Type.PLUGINUSER, "`player_name` = ?", playername);
+				WebPortalUser user = (WebPortalUser) plugin.getMysqlHandler().getData(Type.PLUGINUSER,
 						"`player_uuid` = ?", player.getUniqueId().toString());
 				if(user == null && count == 0)
 				{
 					sendNewPlayerInfoMessage(player);
 				} else if(user == null && count > 0)
 				{
-					ArrayList<PluginUser> users = ConvertHandler.convertListI(
-							plugin.getMysqlHandler().getAllListAt(Type.PLUGINUSER, "`id`", false, "`player_name` = ?", playername));
-					for(PluginUser u : users)
+					ArrayList<WebPortalUser> users = ConvertHandler.convertListI(
+							plugin.getMysqlHandler().getFullList(Type.PLUGINUSER, "`id` ASC", "`player_name` = ?", playername));
+					for(WebPortalUser u : users)
 					{
 						plugin.getMysqlHandler().deleteData(Type.PLUGINUSER, "`player_uuid` = ?", u.getUUID());
 					}
@@ -69,20 +69,20 @@ public class JoinListener implements Listener
 	
 	private void sendNewPlayerInfoMessage(Player player)
 	{
-		if(!PluginSettings.settings.isSendNewPlayerAInfo())
+		if(!new ConfigHandler().isSendNewPlayerAInfo())
 		{
 			return;
 		}
 		List<String> listmsg = plugin.getYamlHandler().getLang().getStringList("NewPlayerInfoMessage");
 		for(String s : listmsg)
 		{
-			player.spigot().sendMessage(ChatApi.generateTextComponent(s.replace("%url%", PluginSettings.settings.getWebURL())));
+			player.spigot().sendMessage(ChatApi.generateTextComponent(s.replace("%url%", new ConfigHandler().getWebURL())));
 		}
 	}
 	
 	private void updateName(Player player, String playername)
 	{
-		PluginUser user = (PluginUser) plugin.getMysqlHandler().getData(Type.PLUGINUSER, "`player_uuid` = ?", player.getUniqueId().toString());
+		WebPortalUser user = (WebPortalUser) plugin.getMysqlHandler().getData(Type.PLUGINUSER, "`player_uuid` = ?", player.getUniqueId().toString());
 		if(user == null)
 		{
 			return;

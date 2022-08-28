@@ -3,18 +3,18 @@ package main.java.me.avankziar.wpc.general;
 import java.util.ArrayList;
 
 import main.java.me.avankziar.wpc.spigot.objects.JavaTask;
-import main.java.me.avankziar.wpc.spigot.objects.PluginUser;
+import main.java.me.avankziar.wpc.spigot.objects.WebPortalUser;
 
 public class ConvertHandler
 {
-	public static ArrayList<PluginUser> convertListI(ArrayList<?> list)
+	public static ArrayList<WebPortalUser> convertListI(ArrayList<?> list)
 	{
-		ArrayList<PluginUser> el = new ArrayList<>();
+		ArrayList<WebPortalUser> el = new ArrayList<>();
 		for(Object o : list)
 		{
-			if(o instanceof PluginUser)
+			if(o instanceof WebPortalUser)
 			{
-				el.add((PluginUser) o);
+				el.add((WebPortalUser) o);
 			} else
 			{
 				return null;

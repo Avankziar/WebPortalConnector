@@ -12,9 +12,9 @@ import main.java.me.avankziar.wpc.spigot.assistance.SHA256Cryption;
 import main.java.me.avankziar.wpc.spigot.cmdtree.ArgumentConstructor;
 import main.java.me.avankziar.wpc.spigot.cmdtree.ArgumentModule;
 import main.java.me.avankziar.wpc.spigot.database.MysqlHandler.Type;
-import main.java.me.avankziar.wpc.spigot.objects.PluginSettings;
-import main.java.me.avankziar.wpc.spigot.objects.PluginUser;
-import main.java.me.avankziar.wpc.spigot.permission.BypassPermission;
+import main.java.me.avankziar.wpc.spigot.handler.ConfigHandler;
+import main.java.me.avankziar.wpc.spigot.objects.WebPortalUser;
+import main.java.me.avankziar.wpc.spigot.permission.Bypass;
 
 public class ARGRegister extends ArgumentModule
 {
@@ -36,12 +36,12 @@ public class ARGRegister extends ArgumentModule
 		String cryptPassword = "";
 		try
 		{
-			cryptPassword = SHA256Cryption.encryptSHA256(password+PluginSettings.settings.getCryptSalt());
+			cryptPassword = SHA256Cryption.encryptSHA256(password+new ConfigHandler().getCryptSalt());
 		} catch (NoSuchAlgorithmException e) {e.printStackTrace();}
 		boolean isadmin = false;
 		if(args.length >= 3)
 		{
-			if(!player.hasPermission(BypassPermission.REGISTERADMIN))
+			if(!player.hasPermission(Bypass.get(Bypass.Permission.REGISTER_ADMIN)))
 			{
 				player.sendMessage(ChatApi.tl(plugin.getYamlHandler().getLang().getString("NoPermission")));
 				return;
@@ -53,7 +53,7 @@ public class ARGRegister extends ArgumentModule
 			}
 			isadmin = Boolean.parseBoolean(args[2]);
 		}
-		PluginUser user = new PluginUser(uuid, playername, cryptPassword, isadmin);
+		WebPortalUser user = new WebPortalUser(uuid, playername, cryptPassword, isadmin);
 		if(plugin.getMysqlHandler().exist(Type.PLUGINUSER, "`player_uuid` = ?", uuid))
 		{
 			plugin.getMysqlHandler().updateData(Type.PLUGINUSER, user, "`player_uuid` = ?", uuid);

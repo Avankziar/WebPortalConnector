@@ -13,7 +13,6 @@ import org.bukkit.entity.Player;
 import main.java.me.avankziar.wpc.spigot.WebPortalConnector;
 import main.java.me.avankziar.wpc.spigot.cmdtree.ArgumentConstructor;
 import main.java.me.avankziar.wpc.spigot.cmdtree.CommandConstructor;
-import main.java.me.avankziar.wpc.spigot.objects.PluginSettings;
 
 public class TABCompletion implements TabCompleter
 {	
@@ -26,7 +25,7 @@ public class TABCompletion implements TabCompleter
 	
 	private void debug(Player player, String s)
 	{
-		PluginSettings.debug(player, s);
+		return;	
 	}
 	
 	@Override

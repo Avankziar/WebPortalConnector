@@ -1,17 +1,10 @@
 package main.java.me.avankziar.wpc.spigot.handler;
 
-import java.util.LinkedHashMap;
-
-import main.java.me.avankziar.wpc.spigot.WebPortalConnector;
-import main.java.me.avankziar.wpc.spigot.database.MysqlHandler.Type;
-import main.java.me.avankziar.wpc.spigot.objects.PluginObject;
-import main.java.me.avankziar.wpc.spigot.objects.TableWrapper;
-
 public class WebTaskHandler
 {
 	public WebTaskHandler(){}
 	
-	public void addPluginTables(String pluginname, String aliasname, LinkedHashMap<String, String> tableMap)
+	/*public void addPluginTables(String pluginname, String aliasname, LinkedHashMap<String, String> tableMap)
 	{
 		if(WebPortalConnector.getPlugin().getMysqlHandler().exist(Type.PLUGINS, "`pluginname` = ?", pluginname))
 		{
@@ -23,13 +16,13 @@ public class WebTaskHandler
 			}
 			if(tableMap == null)
 			{
-				pobject.setActiv(false);
+				pobject.setActive(false);
 				WebPortalConnector.getPlugin().getMysqlHandler().updateData(Type.PLUGINS, pobject, "`pluginname` = ?", pluginname);
 				WebPortalConnector.getPlugin().getLogger().info("Plugin "+pluginname+" as Alias " + aliasname + " detected! Table cannot found! Disable the plugin for the WebPortal!");
 				return;
 			}
 			pobject.setPluginTables(TableWrapper.convertToTableObjectList(tableMap));
-			final boolean boo = pobject.isActiv();
+			final boolean boo = pobject.isActive();
 			WebPortalConnector.getPlugin().getMysqlHandler().updateData(Type.PLUGINS, pobject, "`pluginname` = ?", pluginname);
 			if(boo)
 			{
@@ -48,5 +41,5 @@ public class WebTaskHandler
 			WebPortalConnector.getPlugin().getMysqlHandler().create(Type.PLUGINS, pobject);
 			WebPortalConnector.getPlugin().getLogger().info("Plugin "+pluginname+" as Alias " + aliasname + " detected! Create Mysql entry as well as activate this plugin for the WebPortal");
 		}
-	}
+	}*/
 }

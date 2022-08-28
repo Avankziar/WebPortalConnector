@@ -10,49 +10,61 @@ import java.util.logging.Level;
 import main.java.me.avankziar.wpc.spigot.database.MysqlHandable;
 import main.java.me.avankziar.wpc.spigot.database.MysqlHandler;
 
-public class PluginObject implements MysqlHandable
+public class WebPortalUser implements MysqlHandable
 {
-	private String pluginName;
-	private String aliasName;
-	private boolean active;
+	private String uuid;
+	private String name;
+	private String password;
+	private boolean admin;
 	
-	public PluginObject() {}
+	public WebPortalUser(){}
 	
-	public PluginObject(String pluginName, String aliasName, boolean active)
+	public WebPortalUser(String uuid, String name, String password, boolean admin)
 	{
-		setPluginName(pluginName);
-		setAliasName(aliasName);
-		setActive(active);
+		setUUID(uuid);
+		setName(name);
+		setPassword(password);
+		setAdmin(admin);
+	}
+	
+	public String getUUID()
+	{
+		return uuid;
 	}
 
-	public String getPluginName()
+	public void setUUID(String uuid)
 	{
-		return pluginName;
+		this.uuid = uuid;
 	}
 
-	public void setPluginName(String pluginName)
+	public String getName()
 	{
-		this.pluginName = pluginName;
+		return name;
 	}
 
-	public boolean isActive()
+	public void setName(String name)
 	{
-		return active;
+		this.name = name;
 	}
 
-	public void setActive(boolean active)
+	public String getPassword()
 	{
-		this.active = active;
+		return password;
 	}
 
-	public String getAliasName()
+	public void setPassword(String password)
 	{
-		return aliasName;
+		this.password = password;
 	}
 
-	public void setAliasName(String aliasName)
+	public boolean isAdmin()
 	{
-		this.aliasName = aliasName;
+		return admin;
+	}
+
+	public void setAdmin(boolean admin)
+	{
+		this.admin = admin;
 	}
 	
 	@Override
@@ -61,12 +73,13 @@ public class PluginObject implements MysqlHandable
 		try
 		{
 			String sql = "INSERT INTO `" + tablename
-					+ "`(`pluginname`, `aliasname`, `active`) " 
+					+ "`(`player_uuid`, `player_name`, `pw`, `isadmin`) " 
 					+ "VALUES(?, ?, ?, ?)";
 			PreparedStatement ps = conn.prepareStatement(sql);
-			ps.setString(1, getPluginName());
-	        ps.setString(2, getAliasName());
-	        ps.setBoolean(3, isActive());
+			ps.setString(1, getUUID());
+	        ps.setString(2, getName());
+	        ps.setString(3, getPassword());
+	        ps.setBoolean(4, isAdmin());
 	        int i = ps.executeUpdate();
 	        MysqlHandler.addRows(MysqlHandler.QueryType.INSERT, i);
 	        return true;
@@ -83,13 +96,14 @@ public class PluginObject implements MysqlHandable
 		try
 		{
 			String sql = "UPDATE `" + tablename
-					+ "` SET `playername` = ?, `aliasname` = ?, `active` = ?" 
+					+ "` SET `player_uuid` = ?, `player_name` = ?, `pw` = ?, `isadmin` = ?" 
 					+ " WHERE "+whereColumn;
 			PreparedStatement ps = conn.prepareStatement(sql);
-			ps.setString(1, getPluginName());
-	        ps.setString(2, getAliasName());
-	        ps.setBoolean(3, isActive());
-			int i = 4;
+			ps.setString(1, getUUID());
+	        ps.setString(2, getName());
+	        ps.setString(3, getPassword());
+	        ps.setBoolean(4, isAdmin());
+			int i = 5;
 			for(Object o : whereObject)
 			{
 				ps.setObject(i, o);
@@ -125,10 +139,11 @@ public class PluginObject implements MysqlHandable
 			ArrayList<Object> al = new ArrayList<>();
 			while (rs.next()) 
 			{
-				al.add(new PluginObject(
-	        			rs.getString("pluginname"),
-	        			rs.getString("aliasname"),
-	        			rs.getBoolean("active")));
+				al.add(new WebPortalUser(
+	        			rs.getString("player_uuid"),
+	        			rs.getString("player_name"),
+	        			rs.getString("pw"),
+	        			rs.getBoolean("isadmin")));
 			}
 			return al;
 		} catch (SQLException e)
@@ -138,14 +153,14 @@ public class PluginObject implements MysqlHandable
 		return new ArrayList<>();
 	}
 	
-	public static ArrayList<PluginObject> convert(ArrayList<Object> arrayList)
+	public static ArrayList<WebPortalUser> convert(ArrayList<Object> arrayList)
 	{
-		ArrayList<PluginObject> l = new ArrayList<>();
+		ArrayList<WebPortalUser> l = new ArrayList<>();
 		for(Object o : arrayList)
 		{
-			if(o instanceof PluginObject)
+			if(o instanceof WebPortalUser)
 			{
-				l.add((PluginObject) o);
+				l.add((WebPortalUser) o);
 			}
 		}
 		return l;

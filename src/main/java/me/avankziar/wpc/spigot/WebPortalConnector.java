@@ -1,11 +1,11 @@
 package main.java.me.avankziar.wpc.spigot;
 
-import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.logging.Logger;
 
@@ -15,30 +15,34 @@ import org.bukkit.command.PluginCommand;
 import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
+import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.SimplePluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import main.java.me.avankziar.ifh.spigot.administration.Administration;
 import main.java.me.avankziar.wpc.spigot.assistance.BackgroundTask;
 import main.java.me.avankziar.wpc.spigot.assistance.Utility;
 import main.java.me.avankziar.wpc.spigot.cmd.TABCompletion;
 import main.java.me.avankziar.wpc.spigot.cmd.WPCCommandExecutor;
+import main.java.me.avankziar.wpc.spigot.cmd.wpc.ARGHowToRegister;
+import main.java.me.avankziar.wpc.spigot.cmd.wpc.ARGRegister;
 import main.java.me.avankziar.wpc.spigot.cmdtree.ArgumentConstructor;
 import main.java.me.avankziar.wpc.spigot.cmdtree.ArgumentModule;
 import main.java.me.avankziar.wpc.spigot.cmdtree.BaseConstructor;
 import main.java.me.avankziar.wpc.spigot.cmdtree.CommandConstructor;
+import main.java.me.avankziar.wpc.spigot.cmdtree.CommandExecuteType;
 import main.java.me.avankziar.wpc.spigot.database.MysqlHandler;
+import main.java.me.avankziar.wpc.spigot.database.MysqlHandler.Type;
 import main.java.me.avankziar.wpc.spigot.database.MysqlSetup;
 import main.java.me.avankziar.wpc.spigot.database.YamlHandler;
 import main.java.me.avankziar.wpc.spigot.database.YamlManager;
-import main.java.me.avankziar.wpc.spigot.database.MysqlHandler.Type;
+import main.java.me.avankziar.wpc.spigot.handler.ConfigHandler;
 import main.java.me.avankziar.wpc.spigot.listener.AddPluginSupportListener;
 import main.java.me.avankziar.wpc.spigot.listener.JavaPHPTaskEndListener;
 import main.java.me.avankziar.wpc.spigot.listener.JoinListener;
 import main.java.me.avankziar.wpc.spigot.metrics.Metrics;
 import main.java.me.avankziar.wpc.spigot.objects.Parameter;
-import main.java.me.avankziar.wpc.spigot.objects.PluginSettings;
-import main.java.me.avankziar.wpc.spigot.permission.BypassPermission;
-import main.java.me.avankziar.wpc.spigot.permission.KeyHandler;
+import main.java.me.avankziar.wpc.spigot.permission.Bypass;
 
 public class WebPortalConnector extends JavaPlugin
 {
@@ -59,7 +63,8 @@ public class WebPortalConnector extends JavaPlugin
 	
 	public static String infoCommandPath = "CmdWpc";
 	public static String infoCommand = "/";
-	public static String baseCommandI = "wpc";
+	
+	public Administration administrationConsumer;
 	
 	public void onEnable()
 	{
@@ -74,20 +79,24 @@ public class WebPortalConnector extends JavaPlugin
 		log.info(" ╚███╔███╔╝██║     ╚██████╗ | SoftDepend Plugins: "+plugin.getDescription().getSoftDepend().toString());
 		log.info("  ╚══╝╚══╝ ╚═╝      ╚═════╝ | LoadBefore: "+plugin.getDescription().getLoadBefore().toString());
 		
+		setupIFHAdministration();
+		
 		yamlHandler = new YamlHandler(plugin);
 		
-		if (yamlHandler.getConfig().getBoolean("Mysql.Status", false) == true)
+		String path = plugin.getYamlHandler().getConfig().getString("IFHAdministrationPath");
+		boolean adm = plugin.getAdministration() != null 
+				&& plugin.getYamlHandler().getConfig().getBoolean("useIFHAdministration")
+				&& plugin.getAdministration().isMysqlPathActive(path);
+		if(adm || yamlHandler.getConfig().getBoolean("Mysql.Status", false) == true)
 		{
 			mysqlHandler = new MysqlHandler(plugin);
-			mysqlSetup = new MysqlSetup(plugin);
+			mysqlSetup = new MysqlSetup(plugin, adm, path);
 		} else
 		{
 			log.severe("MySQL is not set in the Plugin " + pluginName + "!");
 			Bukkit.getPluginManager().getPlugin(pluginName).getPluginLoader().disablePlugin(plugin);
 			return;
 		}
-		
-		PluginSettings.initSettings(plugin);
 		
 		utility = new Utility(plugin);
 		backgroundTask = new BackgroundTask(plugin);
@@ -103,13 +112,6 @@ public class WebPortalConnector extends JavaPlugin
 	{
 		Bukkit.getScheduler().cancelTasks(plugin);
 		HandlerList.unregisterAll(plugin);
-		if (yamlHandler.getConfig().getBoolean("Mysql.Status", false) == true)
-		{
-			if (mysqlSetup.getConnection() != null) 
-			{
-				mysqlSetup.closeConnection();
-			}
-		}
 		log.info(pluginName + " is disabled!");
 	}
 
@@ -157,34 +159,39 @@ public class WebPortalConnector extends JavaPlugin
 	{		
 		infoCommand += plugin.getYamlHandler().getCommands().getString("wpc.Name");
 		
-		ArgumentConstructor htr = new ArgumentConstructor(baseCommandI+"_htr", 0, 0, 0, true, null);
-		PluginSettings.settings.addCommands(KeyHandler.WPC_HTR, htr.getCommandString().trim());
-		ArgumentConstructor register = new ArgumentConstructor(baseCommandI+"_register", 0, 1, 2, false, null);
-		PluginSettings.settings.addCommands(KeyHandler.WPC_REGISTER, register.getCommandString().trim());
+		ArgumentConstructor htr = new ArgumentConstructor(CommandExecuteType.WPC_HOWTOREGISTER, "wpc_htr", 0, 0, 0, true, null);
+		new ARGHowToRegister(plugin, htr);
+		ArgumentConstructor register = new ArgumentConstructor(CommandExecuteType.WPC_REGISTER, "wpc_register", 0, 1, 2, false, null);
+		new ARGRegister(plugin, register);
 		
-		CommandConstructor wpc = new CommandConstructor("wpc", false,
-				htr);
+		CommandConstructor wpc = new CommandConstructor(CommandExecuteType.WPC, "wpc", false,
+				htr, register);
 		
 		registerCommand(wpc.getPath(), wpc.getName());
 		getCommand(wpc.getName()).setExecutor(new WPCCommandExecutor(plugin, wpc));
 		getCommand(wpc.getName()).setTabCompleter(new TABCompletion(plugin));
-		PluginSettings.settings.addCommands(KeyHandler.WPC, wpc.getCommandString().trim());
-		
-		addingHelps(wpc,
-						htr, register);
 	}
 	
 	public void setupBypassPerm()
 	{
-		BypassPermission.init(plugin);
+		String path = "Count.";
+		for(Bypass.CountPermission bypass : new ArrayList<Bypass.CountPermission>(EnumSet.allOf(Bypass.CountPermission.class)))
+		{
+			Bypass.set(bypass, yamlHandler.getCommands().getString(path+bypass.toString()));
+		}
+		path = "Bypass.";
+		for(Bypass.Permission bypass : new ArrayList<Bypass.Permission>(EnumSet.allOf(Bypass.Permission.class)))
+		{
+			Bypass.set(bypass, yamlHandler.getCommands().getString(path+bypass.toString()));
+		}
 	}
 	
-	public ArrayList<BaseConstructor> getHelpList()
+	public ArrayList<BaseConstructor> getCommandHelpList()
 	{
 		return helpList;
 	}
 	
-	public void addingHelps(BaseConstructor... objects)
+	public void addingCommandHelps(BaseConstructor... objects)
 	{
 		for(BaseConstructor bc : objects)
 		{
@@ -319,26 +326,6 @@ public class WebPortalConnector extends JavaPlugin
 		pm.registerEvents(new JavaPHPTaskEndListener(plugin), plugin);
 	}
 	
-	public boolean reload() throws IOException
-	{
-		if(!yamlHandler.loadYamlHandler())
-		{
-			return false;
-		}
-		if(yamlHandler.getConfig().getBoolean("Mysql.Status", false))
-		{
-			mysqlSetup.closeConnection();
-			if(!mysqlSetup.loadMysqlSetup())
-			{
-				return false;
-			}
-		} else
-		{
-			return false;
-		}
-		return true;
-	}
-	
 	public boolean existHook(String externPluginName)
 	{
 		if(plugin.getServer().getPluginManager().getPlugin(externPluginName) == null)
@@ -350,14 +337,35 @@ public class WebPortalConnector extends JavaPlugin
 	}
 	
 	public void setupBstats()
-	{
+	{	
 		int pluginId = 10344;
         new Metrics(this, pluginId);
 	}
 	
+	private void setupIFHAdministration()
+	{ 
+		if(!plugin.getServer().getPluginManager().isPluginEnabled("InterfaceHub")) 
+	    {
+	    	return;
+	    }
+		RegisteredServiceProvider<main.java.me.avankziar.ifh.spigot.administration.Administration> rsp = 
+                getServer().getServicesManager().getRegistration(Administration.class);
+		if (rsp == null) 
+		{
+		   return;
+		}
+		administrationConsumer = rsp.getProvider();
+		log.info(pluginName + " detected InterfaceHub >>> Administration.class is consumed!");
+	}
+	
+	public Administration getAdministration()
+	{
+		return administrationConsumer;
+	}
+	
 	public void initParameters()
 	{
-		Parameter salt = new Parameter("salt", PluginSettings.settings.getCryptSalt());
+		Parameter salt = new Parameter("salt", new ConfigHandler().getCryptSalt());
 		if(plugin.getMysqlHandler().exist(Type.PARAMETER, "`parameters` = ?", salt.getKeyword()))
 		{
 			plugin.getMysqlHandler().updateData(Type.PARAMETER, salt, "`parameters` = ?", salt.getKeyword());

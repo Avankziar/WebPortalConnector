@@ -9,8 +9,8 @@ import main.java.me.avankziar.wpc.general.ConvertHandler;
 import main.java.me.avankziar.wpc.spigot.WebPortalConnector;
 import main.java.me.avankziar.wpc.spigot.database.MysqlHandler.Type;
 import main.java.me.avankziar.wpc.spigot.event.JavaPHPTaskEvent;
+import main.java.me.avankziar.wpc.spigot.handler.ConfigHandler;
 import main.java.me.avankziar.wpc.spigot.objects.JavaTask;
-import main.java.me.avankziar.wpc.spigot.objects.PluginSettings;
 
 public class BackgroundTask
 {
@@ -30,7 +30,7 @@ public class BackgroundTask
 	
 	private void runJavaPHPTask()
 	{
-		if(!PluginSettings.settings.isMainServer())
+		if(!new ConfigHandler().isMainServer())
 		{
 			return;
 		}
@@ -39,16 +39,16 @@ public class BackgroundTask
 			@Override
 			public void run()
 			{
-				int openTaskCount = plugin.getMysqlHandler().countWhereID(Type.JAVATASK, "`isopen` = ?", true);
+				int openTaskCount = plugin.getMysqlHandler().getCount(Type.JAVATASK, "`isopen` = ?", true);
 				if(openTaskCount <= 0)
 				{
 					return;
 				}
 				ArrayList<JavaTask> openTasks = ConvertHandler.convertListIII(
-						plugin.getMysqlHandler().getAllListAt(Type.JAVATASK, "`id`", false, "`isopen` = ?", true));
+						plugin.getMysqlHandler().getFullList(Type.JAVATASK, "`id` ASC", "`isopen` = ?", true));
 				runJavaPHPTasks(openTasks);
 			}
-		}.runTaskTimerAsynchronously(plugin, 0L, 20L*PluginSettings.settings.getJavaTaskCheck());
+		}.runTaskTimerAsynchronously(plugin, 0L, 20L*new ConfigHandler().getJavaTaskCheck());
 	}
 	
 	private void runJavaPHPTasks(ArrayList<JavaTask> openTasks)

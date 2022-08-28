@@ -128,7 +128,7 @@ public class WPCCommandExecutor implements CommandExecutor
 		int last = 0;
 		player.sendMessage(ChatApi.tl(plugin.getYamlHandler().getLang().getString(
 				WebPortalConnector.infoCommandPath+".Headline")));
-		for(BaseConstructor bc : plugin.getHelpList())
+		for(BaseConstructor bc : plugin.getCommandHelpList())
 		{
 			if(count >= start && count <= end)
 			{
@@ -198,5 +198,4 @@ public class WPCCommandExecutor implements CommandExecutor
 		MSG.setExtra(pages);	
 		player.spigot().sendMessage(MSG);
 	}
-
 }

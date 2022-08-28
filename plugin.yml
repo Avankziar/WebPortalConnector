@@ -2,5 +2,5 @@ name: WebPortalConnector
 main: main.java.me.avankziar.spigot.wpc.WebPortalConnector
 version: 1
 author: Avankziar
-api-version: 1.16
+api-version: 1.17
 description: A Web Connector

@@ -2,6 +2,8 @@ package main.java.me.avankziar.wpc.spigot.database;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.LinkedHashMap;
@@ -9,7 +11,6 @@ import java.util.List;
 
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.YamlConfiguration;
-import org.bukkit.craftbukkit.libs.org.apache.commons.io.FileUtils;
 
 import main.java.me.avankziar.wpc.spigot.WebPortalConnector;
 import main.java.me.avankziar.wpc.spigot.database.Language.ISO639_2B;
@@ -48,7 +49,7 @@ public class YamlHandler
 		return lang;
 	}
 	
-	private boolean loadYamlTask(File file, YamlConfiguration yaml)
+	private YamlConfiguration loadYamlTask(File file, YamlConfiguration yaml)
 	{
 		try 
 		{
@@ -59,14 +60,14 @@ public class YamlHandler
 					"Could not load the %file% file! You need to regenerate the %file%! Error: ".replace("%file%", file.getName())
 					+ e.getMessage());
 			e.printStackTrace();
-			return false;
 		}
-		return true;
+		return yaml;
 	}
 	
+	@SuppressWarnings("deprecation")
 	private boolean writeFile(File file, YamlConfiguration yml, LinkedHashMap<String, Language> keyMap)
 	{
-		yml.options().header("For more explanation see \n Your pluginsite");
+		yml.options().header("For more explanation see \n https://www.spigotmc.org/resources/simple-chat-channels.35220/");
 		for(String key : keyMap.keySet())
 		{
 			Language languageObject = keyMap.get(key);
@@ -128,33 +129,26 @@ public class YamlHandler
 		if(!config.exists()) 
 		{
 			WebPortalConnector.log.info("Create config.yml...");
-			try
+			try(InputStream in = plugin.getResource("default.yml"))
 			{
-				/*
-				 * If config.yml dont exist in the main directory, than create config.yml as empty file
-				 */
-				FileUtils.copyToFile(plugin.getResource("default.yml"), config);
+				Files.copy(in, config.toPath());
 			} catch (IOException e)
 			{
 				e.printStackTrace();
 			}
 		}
-		/*
-		 * Load the config.yml
-		 */
-		if(!loadYamlTask(config, cfg))
-		{
-			return false;
-		}
-		/*
-		 * Write all path for the configfile
-		 * Make sure, you use the right linkedHashmap from the YamlManager
-		 */
+		cfg = loadYamlTask(config, cfg);
+        if(cfg == null)
+        {
+        	return false;
+        }
 		writeFile(config, cfg, plugin.getYamlManager().getConfigKey());
 		/*
 		 * Define the language
 		 */
-		languages = cfg.getString("Language", "ENG").toUpperCase();
+		languages = plugin.getAdministration() == null 
+				? cfg.getString("Language", "ENG").toUpperCase() 
+				: plugin.getAdministration().getLanguage();
 		/*
 		 * Repeat for all other single flatfiles.
 		 */
@@ -162,20 +156,19 @@ public class YamlHandler
 		if(!commands.exists()) 
 		{
 			WebPortalConnector.log.info("Create commands.yml...");
-			try
+			try(InputStream in = plugin.getResource("default.yml"))
 			{
-				//Erstellung einer "leere" config.yml
-				FileUtils.copyToFile(plugin.getResource("default.yml"), commands);
+				Files.copy(in, commands.toPath());
 			} catch (IOException e)
 			{
 				e.printStackTrace();
 			}
 		}
-		
-		if(!loadYamlTask(commands, com))
-		{
-			return false;
-		}
+		com = loadYamlTask(commands, com);
+        if(com == null)
+        {
+        	return false;
+        }
 		writeFile(commands, com, plugin.getYamlManager().getCommandsKey());
 		return true;
 	}
@@ -237,18 +230,19 @@ public class YamlHandler
 		if(!language.exists()) 
 		{
 			WebPortalConnector.log.info("Create %lang%.yml...".replace("%lang%", languageString));
-			try
+			try(InputStream in = plugin.getResource("default.yml"))
 			{
-				FileUtils.copyToFile(plugin.getResource("default.yml"), language);
+				Files.copy(in, language.toPath());
 			} catch (IOException e)
 			{
 				e.printStackTrace();
 			}
 		}
-		if(!loadYamlTask(language, lang))
-		{
-			return false;
-		}
+		lang = loadYamlTask(language, lang);
+        if(lang == null)
+        {
+        	return false;
+        }
 		writeFile(language, lang, plugin.getYamlManager().getLanguageKey());
 		return true;
 	}
