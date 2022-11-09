@@ -16,23 +16,27 @@ import javax.crypto.spec.SecretKeySpec;
 public class _AESCipher
 {
 	private static String CIPHER_NAME = "AES/CBC/PKCS5PADDING";
-    private static int CIPHER_KEY_LEN = 16; //128 bits
+    private static int CIPHER_KEY_LEN = 16; //16 = 128 bits
     
-    public static void main(String[] args)
+    /*public static void main(String[] args)
 	{
-		/*String data = "Test1611771877468";
+		String data = "Test 1611771877468";
+		String text = "Lorem ipsum dolor sit amet, consetetur sadipscing elitr, "
+    			+ "sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, "
+    			+ "sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. "
+    			+ "Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.";
 		String key = generateKey();
 		String iv = generateIv();
-		System.out.println("Data: "+data);
+		System.out.println("Data: "+text);
 		System.out.println("Iv: "+iv);
 		System.out.println("Key: "+key);
 		
-		String encrypt = encrypt(key, iv, data);
+		String encrypt = encrypt(key, iv, text);
 		System.out.println("Ecrypt: "+encrypt);
 		
 		String decrypt = decrypt(key, encrypt);
-		System.out.println("Decrypt: "+decrypt);*/
-	}
+		System.out.println("Decrypt: "+decrypt);
+	}*/
     
     public static String generateIv()
     {
