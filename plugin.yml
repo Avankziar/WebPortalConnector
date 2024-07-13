@@ -4,3 +4,5 @@ version: 1
 author: Avankziar
 api-version: 1.17
 description: A Web Connector
+softdepend: [InterfaceHub]
+website: TBA
